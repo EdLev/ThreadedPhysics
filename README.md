@@ -11,6 +11,7 @@ Currently working:
 - Double-buffered physics state for threaded velocity and position updates, with a locking getter to copy the current state for rendering or other uses
 - Job-based collision detection with arbitrary number of worker threads (mostly lock-free)
 - Job-based velocity integration with arbitrary number of worker threads (lock-free)
+- Console test app
 
 To do:
 
@@ -20,7 +21,7 @@ Near term:
 
 Mid term:
 - Collision resolution for spheres
-- Simple renderer
+- Simple renderer and visual test app
 - Non-sphere primitives (cylinder, plane, point (?) )
 - Rigid body physics
 
