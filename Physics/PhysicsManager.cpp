@@ -154,7 +154,7 @@ namespace Physics
 			workerThreads.push_back(std::thread([this, &backBuffer]()
 			{
 				int currentIndex;
-				while (currentIndex = CurrentObjectIndex++ < CurrentStateBuffer->size())
+				while ((currentIndex = CurrentObjectIndex++) < CurrentStateBuffer->size())
 				{
 					//Forward Euler for now
 					BackBufferMutex.lock();
