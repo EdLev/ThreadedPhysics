@@ -18,9 +18,9 @@ To do:
 Near term:
 - Finish Matrix4
 - Acceleration/impulse integration
+- Collision resolution for spheres
 
 Mid term:
-- Collision resolution for spheres
 - Simple renderer and visual test app
 - Non-sphere primitives (cylinder, plane, point (?) )
 - Rigid body physics
