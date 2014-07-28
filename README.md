@@ -24,6 +24,7 @@ Mid term:
 - Simple renderer and visual test app
 - Non-sphere primitives (cylinder, plane, point (?) )
 - Rigid body physics
+- Better integrators
 
 Long term:
 - Swept shape collision (will probably require some rethinking of order of operations)
