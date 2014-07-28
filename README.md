@@ -22,7 +22,7 @@ Mid term:
 - Collision resolution for spheres
 - Simple renderer
 - Non-sphere primitives (cylinder, plane, point (?) )
-- Rigid body collision
+- Rigid body physics
 
 Long term:
 - Swept shape collision (will probably require some rethinking of order of operations)
