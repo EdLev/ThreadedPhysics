@@ -12,6 +12,8 @@ Currently working:
 - Job-based collision detection with arbitrary number of worker threads (mostly lock-free)
 - Job-based velocity integration with arbitrary number of worker threads (lock-free)
 - Console test app
+- Sphere primitives
+- Forward Euler integration
 
 To do:
 
