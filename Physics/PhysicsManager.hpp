@@ -3,7 +3,7 @@
 #include <mutex>
 #include <atomic>
 
-#include "../Core/Vector4.hpp"
+#include "../Core/Matrix4.hpp"
 #include "../Core/AlignedAllocator.hpp"
 
 namespace Physics
@@ -31,17 +31,19 @@ namespace Physics
 		PhysicsManager(PhysicsManager&& other) = delete;
 		~PhysicsManager();
 
-		bool PhysicsFrame( float DeltaTime );
+		bool PhysicsFrame( float deltaTime );
 
 		void AddCollisionObject( Core::Vector4& position, Core::Vector4& velocity, float radius );
 
-		void CopyCurrentPhysicsState(simd_vector<PhysicsState>& OutputBuffer);
+		void CopyCurrentPhysicsState(simd_vector<PhysicsState>& outputBuffer);
+		void CopyCollisionObjects(simd_vector<CollisionObject>& outputBuffer);
 
 	private:
 
 		bool DetectCollisions();
 		void DetectCollisionsWorkerFunction();
 		void ResolveCollisions();
+		void ResolveCollisionsWorkerFunction();
 		void ApplyAccelerationsAndImpulses();
 		void ApplyVelocities();
 
@@ -49,9 +51,9 @@ namespace Physics
 		void FinishFrame();
 
 		//set at the beginning of the frame
-		float CurrentDeltaTime;
+		float CurrentdeltaTime;
 
-		std::vector<CollisionObject> CollisionObjects;
+		simd_vector<CollisionObject> CollisionObjects;
 
 		//front and back buffers for threading
 		simd_vector<PhysicsState> PhysicsStateBuffers[2];
@@ -63,7 +65,7 @@ namespace Physics
 		//lock when writing to back buffer
 		std::mutex BackBufferMutex;
 
-		std::vector<std::pair<CollisionObject&, CollisionObject&>> CollisionPairs;
+		simd_vector<std::pair<CollisionObject&, CollisionObject&>> CollisionPairs;
 		std::mutex PairsMutex;
 
 		int NumWorkerThreads;

@@ -41,7 +41,20 @@ namespace Core
 		return *(&X + index);
 	}
 
+	const float& Vector4::operator [] (const int index) const
+	{
+		assert(index >= 0);
+		assert(index <= 3);
+
+		return *(&X + index);
+	}
+
 	float* Vector4::begin()
+	{
+		return &X;
+	}
+
+	const float* Vector4::begin() const
 	{
 		return &X;
 	}
@@ -122,6 +135,18 @@ namespace Core
 		return sqrt(length3Squared());
 	}
 
+	Vector4& Vector4::normalize3()
+	{
+		return (*this /= length3() );
+	}
+
+	Vector4 Vector4::getNormalized3() const
+	{
+		Vector4 result(*this);
+		result.normalize3();
+		return result;
+	}
+
 	float Vector4::dot4(const Vector4& other) const
 	{
 		return dot3(other) + W * other.W;
@@ -136,6 +161,19 @@ namespace Core
 	{
 		return sqrt(length4Squared());
 	}
+
+	Vector4& Vector4::normalize4()
+	{
+		return (*this /= length4() );
+	}
+
+	Vector4 Vector4::getNormalized4() const
+	{
+		Vector4 result(*this);
+		result.normalize4();
+		return result;
+	}
+
 
 	Vector4& Vector4::crossEquals(const Vector4& other)
 	{

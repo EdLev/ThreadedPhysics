@@ -39,9 +39,22 @@ namespace Core
 		return *((float*)&xmm + index);
 	}
 
+	const float& Vector4::operator [] (const int index) const
+	{
+		assert(index >= 0);
+		assert(index <= 3);
+
+		return *((float*)&xmm + index);
+	}
+
 	float* Vector4::begin()
 	{
 		return (float*)&xmm;
+	}
+
+	const float* Vector4::begin() const
+	{
+		return (const float*)&xmm;
 	}
 
 	float* Vector4::end()
@@ -116,6 +129,18 @@ namespace Core
 		return sqrt(length3Squared());
 	}
 
+	Vector4& Vector4::normalize3()
+	{
+		return (*this /= length3());
+	}
+
+	Vector4 Vector4::getNormalized3() const
+	{
+		Vector4 result(*this);
+		result.normalize3();
+		return result;
+	}
+
 	float Vector4::dot4(const Vector4& other) const
 	{
 		__m128 resultVec = _mm_dp_ps(xmm, other.xmm, 0xff);
@@ -132,6 +157,18 @@ namespace Core
 	float Vector4::length4() const
 	{
 		return sqrt(length4Squared());
+	}
+
+	Vector4& Vector4::normalize4()
+	{
+		return (*this /= length4());
+	}
+
+	Vector4 Vector4::getNormalized4() const
+	{
+		Vector4 result(*this);
+		result.normalize4();
+		return result;
 	}
 
 	Vector4& Vector4::crossEquals(const Vector4& other)

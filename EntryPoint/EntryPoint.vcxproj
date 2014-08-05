@@ -78,6 +78,7 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <BrowseInformation>true</BrowseInformation>
+      <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

@@ -51,5 +51,28 @@ int main()
 		}
 	}
 
+	//int numMatrices = 100000;
+	//std::vector<Core::Matrix4> matrices;
+	//matrices.reserve(numMatrices);
+
+	//for (int matrixIndex = 0; matrixIndex < numMatrices; ++matrixIndex)
+	//{
+	//	matrices.push_back(Core::Matrix4(Core::Vector4(positionDistribution(engine), positionDistribution(engine), positionDistribution(engine), positionDistribution(engine)),
+	//		Core::Vector4(positionDistribution(engine), positionDistribution(engine), positionDistribution(engine), positionDistribution(engine)),
+	//		Core::Vector4(positionDistribution(engine), positionDistribution(engine), positionDistribution(engine), positionDistribution(engine)),
+	//		Core::Vector4(positionDistribution(engine), positionDistribution(engine), positionDistribution(engine), positionDistribution(engine))));
+	//}
+
+	//std::chrono::time_point<std::chrono::high_resolution_clock> startTime = std::chrono::high_resolution_clock::now();
+
+	//for (Core::Matrix4& matrix : matrices)
+	//{
+	//	matrix.invert();
+	//}
+
+	//std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - startTime;
+
+	//std::cout << numMatrices << " inverted in " << duration.count() << "s" << std::endl;
+
 	system("pause");
 }

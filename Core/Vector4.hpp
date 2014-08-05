@@ -1,7 +1,9 @@
+#pragma once
+
 #include "Assert.hpp"
 #include <intrin.h>
 
-#if (_WIN32 || _WIN64 || _LINUX)
+#if 1 && (_WIN32 || _WIN64 || _LINUX)
 #define VECTORIZATION_SSE
 #else
 #define VECTORIZATION_NONE
@@ -15,15 +17,17 @@ namespace Core
 	{
 	public:
 
-		explicit Vector4(const float x, const float y, const float z, const float w = 1.0f);
+		explicit Vector4(const float x, const float y, const float z, const float w = 0.0f);
 		explicit Vector4(const float value);
 		Vector4();
 		Vector4(const Vector4& other);
 
 		Vector4& operator = (const Vector4& other);
 
+		const float& operator [] (const int index) const;
 		float& operator [] (const int index);
 		float* begin();
+		const float* begin() const;
 		float* end();
 
 		Vector4& operator += (const Vector4& other);
@@ -39,9 +43,13 @@ namespace Core
 		float dot3(const Vector4& other) const;
 		float length3Squared() const;
 		float length3() const;
+		Vector4& normalize3();
+		Vector4 getNormalized3() const;
 		float dot4(const Vector4& other) const;
 		float length4Squared() const;
 		float length4() const;
+		Vector4& normalize4();
+		Vector4 getNormalized4() const;
 
 		Vector4& crossEquals(const Vector4& other);
 		Vector4 cross(const Vector4& other) const;

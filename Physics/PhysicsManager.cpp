@@ -6,6 +6,8 @@
 
 namespace Physics
 {
+	using namespace Core;
+
 	PhysicsManager::PhysicsManager(int NumThreads)
 		: CurrentStateBuffer(&PhysicsStateBuffers[0]),
 		CurrentStateBufferIndex( 0 ),
@@ -25,6 +27,7 @@ namespace Physics
 		for (int threadIndex = 0; threadIndex < NumWorkerThreads; ++threadIndex)
 		{
 			WorkerThreads.push_back(std::thread(&PhysicsManager::DetectCollisionsWorkerFunction, this));
+			WorkerThreads.push_back(std::thread(&PhysicsManager::ResolveCollisionsWorkerFunction, this));
 		}
 
 		for (auto& workerThread : WorkerThreads)
@@ -34,9 +37,9 @@ namespace Physics
 		}
 	}
 
-	bool PhysicsManager::PhysicsFrame(float DeltaTime)
+	bool PhysicsManager::PhysicsFrame(float deltaTime)
 	{
-		CurrentDeltaTime = DeltaTime;
+		CurrentdeltaTime = deltaTime;
 
 		//copy current state to back buffer
 		PhysicsStateBuffers[!CurrentStateBufferIndex] = *CurrentStateBuffer;
@@ -106,6 +109,11 @@ namespace Physics
 					}
 				}
 
+				if (CollisionObjects.empty())
+				{
+					bFinishedDetectingCollisions = true;
+				}
+
 				//yield if we're out of the loop, to avoid spending time aggressively checking array bounds if we've finished
 				std::this_thread::yield();
 			}
@@ -133,8 +141,65 @@ namespace Physics
 		return !CollisionPairs.empty();
 	}
 
+
+
 	void PhysicsManager::ResolveCollisions()
 	{
+		CurrentObjectIndex = 0;
+
+		bFinishedResolvingCollisions = false;
+		bResolveCollisions = true;
+		while (!bFinishedResolvingCollisions)
+		{
+			std::this_thread::yield();
+		}
+		bResolveCollisions = false;
+	}
+
+	void PhysicsManager::ResolveCollisionsWorkerFunction()
+	{
+		while (!bShutdown)
+		{
+			if (bResolveCollisions)
+			{
+				const auto& currentPhysicsBuffer = *CurrentStateBuffer;
+				auto& backBuffer = PhysicsStateBuffers[!CurrentStateBufferIndex];
+
+				unsigned int currentPairIndex;
+				while ((currentPairIndex = CurrentObjectIndex++) < CollisionPairs.size())
+				{
+					auto collisionPair = CollisionPairs[currentPairIndex];
+
+					Vector4 collisionNormal = (currentPhysicsBuffer[collisionPair.first.PhysicsStateIndex].Position - currentPhysicsBuffer[collisionPair.second.PhysicsStateIndex].Position).getNormalized3();
+
+					float a1 = currentPhysicsBuffer[collisionPair.first.PhysicsStateIndex].Velocity.dot3(collisionNormal);
+					float a2 = currentPhysicsBuffer[collisionPair.second.PhysicsStateIndex].Velocity.dot3(collisionNormal);
+
+					float p = (2.0f * (a1 - a2)) / 2.0f /*m1 + m2, assume 1.0 mass for now*/;
+
+					backBuffer[collisionPair.first.PhysicsStateIndex].Velocity = currentPhysicsBuffer[collisionPair.first.PhysicsStateIndex].Velocity - collisionNormal * p;
+					backBuffer[collisionPair.second.PhysicsStateIndex].Velocity = currentPhysicsBuffer[collisionPair.second.PhysicsStateIndex].Velocity + collisionNormal * p;
+
+					if (currentPairIndex == CollisionPairs.size() - 1)
+					{
+						bFinishedResolvingCollisions = true;
+					}
+				}
+
+				if (CollisionPairs.empty())
+				{
+					bFinishedResolvingCollisions = true;
+				}
+
+				//yield if we're out of the loop, to avoid spending time aggressively checking array bounds if we've finished
+				std::this_thread::yield();
+			}
+			else
+			{
+				//yield to other physics routines
+				std::this_thread::yield();
+			}
+		}
 	}
 
 	void PhysicsManager::ApplyAccelerationsAndImpulses()
@@ -142,7 +207,7 @@ namespace Physics
 
 	void PhysicsManager::ApplyVelocities()
 	{
-		simd_vector< PhysicsState >& backBuffer = PhysicsStateBuffers[!CurrentStateBufferIndex];
+		auto& backBuffer = PhysicsStateBuffers[!CurrentStateBufferIndex];
 
 		std::vector< std::thread > workerThreads;
 
@@ -153,12 +218,12 @@ namespace Physics
 			//don't really need a separate worker function for this
 			workerThreads.push_back(std::thread([this, &backBuffer]()
 			{
-				int currentIndex;
+				unsigned int currentIndex;
 				while ((currentIndex = CurrentObjectIndex++) < CurrentStateBuffer->size())
 				{
 					//Forward Euler for now
 					BackBufferMutex.lock();
-					backBuffer[currentIndex].Position = (*CurrentStateBuffer)[currentIndex].Position + (*CurrentStateBuffer)[currentIndex].Velocity * CurrentDeltaTime;
+					backBuffer[currentIndex].Position = (*CurrentStateBuffer)[currentIndex].Position + (*CurrentStateBuffer)[currentIndex].Velocity * CurrentdeltaTime;
 					BackBufferMutex.unlock();
 				}
 			}));
@@ -171,11 +236,16 @@ namespace Physics
 
 	}
 
-	void PhysicsManager::CopyCurrentPhysicsState(simd_vector<PhysicsState>& OutputBuffer)
+	void PhysicsManager::CopyCurrentPhysicsState(simd_vector<PhysicsState>& outputBuffer)
 	{
 		CurrentBufferMutex.lock();
-		OutputBuffer = *CurrentStateBuffer;
+		outputBuffer = *CurrentStateBuffer;
 		CurrentBufferMutex.unlock();
+	}
+
+	void PhysicsManager::CopyCollisionObjects(simd_vector<CollisionObject>& outputBuffer)
+	{
+		outputBuffer = CollisionObjects;
 	}
 
 	PhysicsManager::~PhysicsManager()
