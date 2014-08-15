@@ -3,37 +3,52 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <random>
+
+#include <Windows.h>
 
 namespace Physics
 {
 	using namespace Core;
 
-	PhysicsManager::PhysicsManager(int NumThreads)
-		: CurrentStateBuffer(&PhysicsStateBuffers[0]),
+	PhysicsManager::PhysicsManager( int NumThreads )
+		: CurrentStateBuffer( &PhysicsStateBuffers[0] ),
 		CurrentStateBufferIndex( 0 ),
-		CurrentObjectIndex( 0 ),
-		NumWorkerThreads(NumThreads),
-		bDetectCollisions( false ),
-		bFinishedDetectingCollisions( false ),
+		CurrentCollisionPairIndex( 0 ),
+		NumWorkerThreads( NumThreads ),
 		bResolveCollisions( false ),
 		bFinishedResolvingCollisions( false ),
 		bApplyAccelerations( false ),
 		bFinishedApplyingAccelerations( false ),
 		bApplyVelocities( false ),
 		bFinishedApplyingVelocities( false ),
-		bShutdown( false )
+		bShutdown( false ),
+		CurrentObjectBuffer( &CollisionObjects ),
+		CurrentPairsBuffer( &CollisionPairs ),
+		CollisionDetectionJob( 4, &CurrentObjectBuffer, &CurrentPairsBuffer, &DetectCollisionsWorkerFunction, this ),
+		NumFinishedThreads( 0 )
 	{
 		//create detection job for each object to collide against all other objects (for now)
 		for (int threadIndex = 0; threadIndex < NumWorkerThreads; ++threadIndex)
 		{
-			WorkerThreads.push_back(std::thread(&PhysicsManager::DetectCollisionsWorkerFunction, this));
 			WorkerThreads.push_back(std::thread(&PhysicsManager::ResolveCollisionsWorkerFunction, this));
+			WorkerThreads.push_back(std::thread(&PhysicsManager::ApplyVelocitiesWorkerFunction, this));
 		}
 
 		for (auto& workerThread : WorkerThreads)
 		{
 			//detach threads to allow them to work in the background (and not have to create them each frame)
 			workerThread.detach();
+		}
+	}
+
+	PhysicsManager::~PhysicsManager()
+	{
+		bShutdown = true;
+
+		while (NumFinishedThreads < WorkerThreads.size())
+		{
+			std::this_thread::yield();
 		}
 	}
 
@@ -60,67 +75,36 @@ namespace Physics
 
 	void PhysicsManager::AddCollisionObject(Core::Vector4& position, Core::Vector4& velocity, float radius)
 	{
+		CollisionObjects.reserve(100);
 		PhysicsState newState = { position, velocity };
 		CurrentStateBuffer->push_back(newState);
-		CollisionObject newObject = { CurrentStateBuffer->size() - 1, radius };
-		CollisionObjects.push_back(newObject);
+		//CollisionObject newObject = ;
+		CollisionObjects.push_back({ CurrentStateBuffer->size() - 1, Core::Vector4(1.0f, 0.0f, 0.0f, 1.0f), radius });
 	}
 
-	void PhysicsManager::DetectCollisionsWorkerFunction()
+	std::mutex PairsMutex;
+
+	void DetectCollisionsWorkerFunction( decltype(PhysicsManager::CollisionObjects)** CollisionObjects, decltype(PhysicsManager::CollisionPairs)** CollisionPairs, size_t CollisionObjectIndex, PhysicsManager* Manager )
 	{
-		while (!bShutdown)
+		CollisionObject& first = (**CollisionObjects)[CollisionObjectIndex];
+
+		for (auto& second : **CollisionObjects)
 		{
-			if (bDetectCollisions)
+			//don't check it against itself
+			if (first.PhysicsStateIndex == second.PhysicsStateIndex)
 			{
-				unsigned int currentObjectIndex;
-				while ((currentObjectIndex = CurrentObjectIndex++) < CollisionObjects.size())
-				{
-					//std::stringstream ss;
-					//ss << currentObjectIndex << std::endl;
-					//std::cout << ss.str();
-
-					const CollisionObject& first = CollisionObjects[currentObjectIndex];
-
-					for (const auto& second : CollisionObjects)
-					{
-						//don't check it against itself
-						if (first.PhysicsStateIndex == second.PhysicsStateIndex)
-						{
-							continue;
-						}
-
-						auto& currentPhysicsBuffer = *CurrentStateBuffer;
-
-						const float distanceSquared = (currentPhysicsBuffer[first.PhysicsStateIndex].Position - currentPhysicsBuffer[second.PhysicsStateIndex].Position).length3Squared();
-						const float totalRadiusSquared = (first.Radius + second.Radius) * (first.Radius + second.Radius);
-						if (distanceSquared < totalRadiusSquared)
-						{
-							PairsMutex.lock();
-
-							CollisionPairs.push_back(std::make_pair(first, second));
-
-							PairsMutex.unlock();
-						}
-					}
-
-					if (currentObjectIndex == CollisionObjects.size() - 1)
-					{
-						bFinishedDetectingCollisions = true;
-					}
-				}
-
-				if (CollisionObjects.empty())
-				{
-					bFinishedDetectingCollisions = true;
-				}
-
-				//yield if we're out of the loop, to avoid spending time aggressively checking array bounds if we've finished
-				std::this_thread::yield();
+				continue;
 			}
-			else
+
+			auto& currentPhysicsBuffer = *(Manager->CurrentStateBuffer);
+
+			const float distanceSquared = (currentPhysicsBuffer[first.PhysicsStateIndex].Position - currentPhysicsBuffer[second.PhysicsStateIndex].Position).length3Squared();
+			const float totalRadiusSquared = (first.Radius + second.Radius) * (first.Radius + second.Radius);
+			if (distanceSquared < totalRadiusSquared)
 			{
-				//yield to other physics routines
-				std::this_thread::yield();
+				PairsMutex.lock();
+				(**CollisionPairs).push_back(std::make_pair(&first, &second));
+				PairsMutex.unlock();
 			}
 		}
 	}
@@ -128,24 +112,13 @@ namespace Physics
 	bool PhysicsManager::DetectCollisions()
 	{
 		CollisionPairs.clear();
-		CurrentObjectIndex = 0;
-
-		bFinishedDetectingCollisions = false;
-		bDetectCollisions = true; //allow threads to do work
-		while (!bFinishedDetectingCollisions)
-		{
-			//wait until threads are done
-			std::this_thread::yield();
-		}
-		bDetectCollisions = false;
-		return !CollisionPairs.empty();
+		CollisionDetectionJob.Work();
+		return true;
 	}
-
-
 
 	void PhysicsManager::ResolveCollisions()
 	{
-		CurrentObjectIndex = 0;
+		CurrentCollisionPairIndex = 0;
 
 		bFinishedResolvingCollisions = false;
 		bResolveCollisions = true;
@@ -156,29 +129,50 @@ namespace Physics
 		bResolveCollisions = false;
 	}
 
+	std::default_random_engine engine;
+	std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
+
 	void PhysicsManager::ResolveCollisionsWorkerFunction()
 	{
 		while (!bShutdown)
 		{
 			if (bResolveCollisions)
 			{
+				if (CollisionPairs.empty())
+				{
+					bFinishedResolvingCollisions = true;
+					std::this_thread::yield();
+					continue;
+				}
+
+				//OutputDebugString("R");
+
 				const auto& currentPhysicsBuffer = *CurrentStateBuffer;
 				auto& backBuffer = PhysicsStateBuffers[!CurrentStateBufferIndex];
 
 				unsigned int currentPairIndex;
-				while ((currentPairIndex = CurrentObjectIndex++) < CollisionPairs.size())
+				while ((currentPairIndex = CurrentCollisionPairIndex++) < CollisionPairs.size())
 				{
-					auto collisionPair = CollisionPairs[currentPairIndex];
+					auto& collisionPair = CollisionPairs[currentPairIndex];
 
-					Vector4 collisionNormal = (currentPhysicsBuffer[collisionPair.first.PhysicsStateIndex].Position - currentPhysicsBuffer[collisionPair.second.PhysicsStateIndex].Position).getNormalized3();
+					//from second to first
+					Vector4 collisionNormal = (currentPhysicsBuffer[collisionPair.first->PhysicsStateIndex].Position - currentPhysicsBuffer[collisionPair.second->PhysicsStateIndex].Position).getNormalized3();
 
-					float a1 = currentPhysicsBuffer[collisionPair.first.PhysicsStateIndex].Velocity.dot3(collisionNormal);
-					float a2 = currentPhysicsBuffer[collisionPair.second.PhysicsStateIndex].Velocity.dot3(collisionNormal);
+					//only do anything if they're approaching each other (avoid oscillation between interpenetrating spheres)
+					if (currentPhysicsBuffer[collisionPair.first->PhysicsStateIndex].Velocity.dot3(collisionNormal) - currentPhysicsBuffer[collisionPair.second->PhysicsStateIndex].Velocity.dot3(collisionNormal) < 0.0f)
+					{
+						float a1 = currentPhysicsBuffer[collisionPair.first->PhysicsStateIndex].Velocity.dot3(collisionNormal);
+						float a2 = currentPhysicsBuffer[collisionPair.second->PhysicsStateIndex].Velocity.dot3(collisionNormal);
 
-					float p = (2.0f * (a1 - a2)) / 2.0f /*m1 + m2, assume 1.0 mass for now*/;
+						float p = (2.0f * (a1 - a2)) / 2.0f /*m1 + m2, assume 1.0 mass for now*/;
 
-					backBuffer[collisionPair.first.PhysicsStateIndex].Velocity = currentPhysicsBuffer[collisionPair.first.PhysicsStateIndex].Velocity - collisionNormal * p;
-					backBuffer[collisionPair.second.PhysicsStateIndex].Velocity = currentPhysicsBuffer[collisionPair.second.PhysicsStateIndex].Velocity + collisionNormal * p;
+						backBuffer[collisionPair.first->PhysicsStateIndex].Velocity = currentPhysicsBuffer[collisionPair.first->PhysicsStateIndex].Velocity - collisionNormal * p;
+						backBuffer[collisionPair.second->PhysicsStateIndex].Velocity = currentPhysicsBuffer[collisionPair.second->PhysicsStateIndex].Velocity + collisionNormal * p;
+
+						Vector4 color(colorDist(engine), colorDist(engine), colorDist(engine), 1.0f);
+						collisionPair.first->Color = color;
+						collisionPair.second->Color = color;
+					}
 
 					if (currentPairIndex == CollisionPairs.size() - 1)
 					{
@@ -186,10 +180,8 @@ namespace Physics
 					}
 				}
 
-				if (CollisionPairs.empty())
-				{
-					bFinishedResolvingCollisions = true;
-				}
+				//does this risk setting the flag early?
+				bFinishedResolvingCollisions = true;
 
 				//yield if we're out of the loop, to avoid spending time aggressively checking array bounds if we've finished
 				std::this_thread::yield();
@@ -200,6 +192,8 @@ namespace Physics
 				std::this_thread::yield();
 			}
 		}
+
+		++NumFinishedThreads;
 	}
 
 	void PhysicsManager::ApplyAccelerationsAndImpulses()
@@ -207,33 +201,50 @@ namespace Physics
 
 	void PhysicsManager::ApplyVelocities()
 	{
-		auto& backBuffer = PhysicsStateBuffers[!CurrentStateBufferIndex];
+		CurrentPhysicsStateIndex = 0;
 
-		std::vector< std::thread > workerThreads;
+		bFinishedApplyingVelocities = false;
+		bApplyVelocities = true;
 
-		CurrentObjectIndex = 0;
-
-		for (int threadIndex = 0; threadIndex < NumWorkerThreads; ++threadIndex)
+		while (!bFinishedApplyingVelocities)
 		{
-			//don't really need a separate worker function for this
-			workerThreads.push_back(std::thread([this, &backBuffer]()
+			std::this_thread::yield();
+		}
+
+		bApplyVelocities = false;
+	}
+
+	void PhysicsManager::ApplyVelocitiesWorkerFunction()
+	{
+		while (!bShutdown)
+		{
+			if (bApplyVelocities)
 			{
 				unsigned int currentIndex;
-				while ((currentIndex = CurrentObjectIndex++) < CurrentStateBuffer->size())
+				while ((currentIndex = CurrentPhysicsStateIndex++) < CurrentStateBuffer->size())
 				{
+					auto& backBuffer = PhysicsStateBuffers[!CurrentStateBufferIndex];
+
 					//Forward Euler for now
-					BackBufferMutex.lock();
+					//BackBufferMutex.lock();
 					backBuffer[currentIndex].Position = (*CurrentStateBuffer)[currentIndex].Position + (*CurrentStateBuffer)[currentIndex].Velocity * CurrentdeltaTime;
-					BackBufferMutex.unlock();
+					//BackBufferMutex.unlock();
 				}
-			}));
+
+				//does this risk setting the flag early?
+				bFinishedApplyingVelocities = true;
+
+				//yield if we're out of the loop, to avoid spending time aggressively checking array bounds if we've finished
+				std::this_thread::yield();
+			}
+			else
+			{
+				//yield to other physics routines
+				std::this_thread::yield();
+			}
 		}
 
-		for (auto& workerThread : workerThreads)
-		{
-			workerThread.join();
-		}
-
+		++NumFinishedThreads;
 	}
 
 	void PhysicsManager::CopyCurrentPhysicsState(simd_vector<PhysicsState>& outputBuffer)
@@ -248,8 +259,5 @@ namespace Physics
 		outputBuffer = CollisionObjects;
 	}
 
-	PhysicsManager::~PhysicsManager()
-	{
-		bShutdown = true;
-	}
+
 }

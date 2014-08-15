@@ -5,6 +5,7 @@
 
 #include "../Core/Matrix4.hpp"
 #include "../Core/AlignedAllocator.hpp"
+#include "../Core/BackgroundJob.hpp"
 
 namespace Physics
 {
@@ -18,6 +19,7 @@ namespace Physics
 	{
 		//index into the current state buffer
 		size_t PhysicsStateIndex;
+		Core::Vector4 Color;
 		//just spheres for now, subclass for other shapes later (CollidesWith(other) method)
 		float Radius;
 	};
@@ -41,11 +43,15 @@ namespace Physics
 	private:
 
 		bool DetectCollisions();
-		void DetectCollisionsWorkerFunction();
+		//void DetectCollisionsWorkerFunction();
+
 		void ResolveCollisions();
 		void ResolveCollisionsWorkerFunction();
+
 		void ApplyAccelerationsAndImpulses();
+
 		void ApplyVelocities();
+		void ApplyVelocitiesWorkerFunction();
 
 		void SwapPhysicsStateBuffers();
 		void FinishFrame();
@@ -54,6 +60,7 @@ namespace Physics
 		float CurrentdeltaTime;
 
 		simd_vector<CollisionObject> CollisionObjects;
+		decltype(CollisionObjects)* CurrentObjectBuffer;
 
 		//front and back buffers for threading
 		simd_vector<PhysicsState> PhysicsStateBuffers[2];
@@ -65,16 +72,21 @@ namespace Physics
 		//lock when writing to back buffer
 		std::mutex BackBufferMutex;
 
-		simd_vector<std::pair<CollisionObject&, CollisionObject&>> CollisionPairs;
+		std::vector<std::pair<CollisionObject*, CollisionObject*>> CollisionPairs;
+		decltype(CollisionPairs)* CurrentPairsBuffer;
 		std::mutex PairsMutex;
 
 		int NumWorkerThreads;
+		std::vector<std::thread> WorkerThreads;
+
+		//signal threads to return
+		bool bShutdown;
+
 		//used by threads to determine which object to fetch
-		std::atomic<unsigned int> CurrentObjectIndex;
+		std::atomic<unsigned int> CurrentCollisionPairIndex;
+		std::atomic<unsigned int> CurrentPhysicsStateIndex;
 
 		//flags to enable worker threads and have them report their status
-		bool bDetectCollisions;
-		bool bFinishedDetectingCollisions;
 		bool bResolveCollisions;
 		bool bFinishedResolvingCollisions;
 		bool bApplyAccelerations;
@@ -82,9 +94,10 @@ namespace Physics
 		bool bApplyVelocities;
 		bool bFinishedApplyingVelocities;
 
-		//signal threads to return
-		bool bShutdown;
+		std::atomic<unsigned int> NumFinishedThreads;
 
-		std::vector<std::thread> WorkerThreads;
+		friend void DetectCollisionsWorkerFunction(decltype(CollisionObjects)**, decltype(CollisionPairs)**, size_t, PhysicsManager*);
+
+		BackgroundJob<decltype(CollisionObjects), decltype(CollisionPairs), decltype(DetectCollisionsWorkerFunction), PhysicsManager> CollisionDetectionJob;
 	};
 }

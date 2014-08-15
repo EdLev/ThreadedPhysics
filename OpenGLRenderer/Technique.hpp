@@ -12,7 +12,7 @@ namespace Rendering
 		Technique();
 		virtual ~Technique();
 
-		void Enable();
+		virtual void Enable();
 
 	protected:
 

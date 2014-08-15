@@ -33,7 +33,7 @@ namespace Rendering
 		if (pixelFormat == 0)
 			return false;
 
-		bool bResult = SetPixelFormat(DeviceContext, pixelFormat, &pfd); 
+		bool bResult = SetPixelFormat(DeviceContext, pixelFormat, &pfd) != 0; 
 		if (!bResult) 
 			return false;
 

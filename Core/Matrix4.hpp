@@ -119,7 +119,7 @@ namespace Core
 			return result;
 		}
 
-		static Matrix4 OrthographicProjectionMatrics(const float left, const float right, const float top, const float bottom, const float nearDistance, const float farDistance)
+		static Matrix4 OrthographicProjectionMatrix(const float left, const float right, const float top, const float bottom, const float nearDistance, const float farDistance)
 		{
 			Matrix4 result;
 			setothographicmat(left, right, top, bottom, nearDistance, farDistance, result);

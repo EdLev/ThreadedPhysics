@@ -28,9 +28,6 @@ public:
 		AddShader(GL_GEOMETRY_SHADER, "SphereParticles.gs");
 		AddShader(GL_FRAGMENT_SHADER, "SphereParticles.fs");
 
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-
 		glEnable(GL_PROGRAM_POINT_SIZE);
 
 		Finalize();
@@ -38,7 +35,20 @@ public:
 		ViewProjectionIndex = glGetUniformLocation(ProgramIndex, "gVP");
 		CameraPositionIndex = glGetUniformLocation(ProgramIndex, "gCameraPos");
 
+		//glEnable(GL_DEPTH_TEST);
+		//glDepthFunc(GL_LESS);
+
 		return true;
+	}
+
+	virtual void Enable()
+	{
+
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+
+		Technique::Enable();
 	}
 
 	void SetViewProjection(const Core::Matrix4& viewProjection)
@@ -59,39 +69,8 @@ private:
 struct SphereSprite
 {
 	Core::Vector4 Position;
+	Core::Vector4 Color;
 	float Radius;
-};
-
-class SimpleTechnique : public Rendering::Technique
-{
-public:
-	SimpleTechnique()
-	{
-		Setup();
-	}
-
-	bool Setup()
-	{
-		AddShader(GL_VERTEX_SHADER, "Simple.vs");
-		AddShader(GL_FRAGMENT_SHADER, "Simple.fs");
-
-		Finalize();
-
-		glEnableVertexAttribArray(0);
-
-		ViewProjectionIndex = glGetUniformLocation(ProgramIndex, "ViewProjection");
-
-		return true;
-	}
-
-	void SetViewProjection(const Core::Matrix4& viewProjection)
-	{
-		glUniformMatrix4fv(ViewProjectionIndex, 1, GL_FALSE, viewProjection.begin()->begin());
-	}
-
-private:
-
-	int ViewProjectionIndex;
 };
 
 #define MAX_LOADSTRING 100
@@ -132,19 +111,18 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINDOWSENTRYPOINT));
 
 	SphereParticleTechnique spriteTechnique;
-	SimpleTechnique simpleTechnique;
 	PhysicsManager physicsManager(4);
 
-	default_random_engine engine;
+	default_random_engine engine( 0/*chrono::high_resolution_clock::now().time_since_epoch().count() */);
 	uniform_real_distribution<float> positionDist(-500.0f, 500.0f);
 	uniform_real_distribution<float> velocityDist(-10.0f, 10.0f);
 
-	const int numSpheres = 200;
+	const int numSpheres = 50;
 	for (int i = 0; i < numSpheres; ++i)
 	{
-		physicsManager.AddCollisionObject(	Vector4(positionDist(engine), positionDist(engine), positionDist(engine)), 
+		physicsManager.AddCollisionObject(	Vector4(positionDist(engine), positionDist(engine), positionDist(engine)),
 											Vector4(velocityDist(engine), velocityDist(engine), velocityDist(engine)),
-											100);
+											50.0f);
 	}
 
 	unsigned int spriteVBO;
@@ -156,6 +134,10 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	Vector4 cameraPosition(0, 0, 0);
 
 	Matrix4 triangleModel;
+
+	chrono::time_point<chrono::high_resolution_clock> lastTime = chrono::high_resolution_clock::now();
+	chrono::duration<float> second( 0 );
+	unsigned int frameCounter = 0;
 
 	bool bRunning = true;
 	while (bRunning)
@@ -175,66 +157,63 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			simd_vector<CollisionObject> collisionObjects;
 			simd_vector<SphereSprite> sprites;
 
-			physicsManager.PhysicsFrame(0.01f);
+			chrono::duration<float> interval(chrono::high_resolution_clock::now() - lastTime);
+			lastTime = chrono::high_resolution_clock::now();
+
+			physicsManager.PhysicsFrame( interval.count() );
+
+			second += interval;
+
+			char str[16];
+
+			if (second.count() >= 1.0f)
+			{
+				sprintf_s(str, "%d\n", frameCounter);
+				OutputDebugString(str);
+				frameCounter = 0;
+				second = second.zero();
+			}
 
 			physicsManager.CopyCurrentPhysicsState(physicsState);
 			physicsManager.CopyCollisionObjects(collisionObjects);
 
-			//transform(physicsState.begin(), physicsState.end(), collisionObjects.begin(), back_inserter(sprites),
-			//	[](const PhysicsState& state, const CollisionObject& object)->SphereSprite
-			//{
-			//	const SphereSprite result = { state.Position, object.Radius };
-			//	return result;
-			//});
-
-			for (int i = 0; i < numSpheres; ++i)
+			transform(physicsState.begin(), physicsState.end(), collisionObjects.begin(), back_inserter(sprites),
+				[](const PhysicsState& state, const CollisionObject& object)->SphereSprite
 			{
-				SphereSprite result;
-				result.Position = physicsState[i].Position;
-				result.Radius = collisionObjects[i].Radius;
-				sprites.push_back(result);
-			}
+				const SphereSprite result = { state.Position, object.Color, object.Radius };
+				return result;
+			});
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 			//sprites
 			glBindBuffer(GL_ARRAY_BUFFER, spriteVBO);
-			glBufferData(GL_ARRAY_BUFFER, sprites.size() * sizeof(SphereSprite), &sprites.front(), GL_DYNAMIC_DRAW);
+
+			//cameraPosition.X = 1000;
 
 			spriteTechnique.Enable();
-			spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrics( -500, 500, 500, -500, -500, 500 ) );
-			spriteTechnique.SetCameraPosition(cameraPosition * -1.0f);
+			//spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(45, 1.6f, 10, 1000));
+			spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrix(-500, 500, 500, -500, -500, 500));
+			spriteTechnique.SetCameraPosition(cameraPosition);
 
-			//cameraPosition += Vector4(0, 0, 0.01f);
+			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), 0);
+			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)(sizeof(Vector4)) );
+			glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)(sizeof(Vector4) * 2));
 
-			glBindBuffer(GL_ARRAY_BUFFER, spriteVBO);
-			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 5, 0);
-			glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 5, (void*)4);
+			glBufferData(GL_ARRAY_BUFFER, sprites.size() * sizeof(SphereSprite), &sprites.front(), GL_DYNAMIC_DRAW);
 
 			glDrawArrays(GL_POINTS, 0, sprites.size());
 
-			//triangle
-			simd_vector<Vector4> triangleVertices;
-			triangleVertices.push_back(Vector4(-100,	0,		-100));
-			triangleVertices.push_back(Vector4(0,		100,	-100));
-			triangleVertices.push_back(Vector4(100,		0,		-100));
-
-			triangleModel = Matrix4(Vector4(0, 0, 1.0f), 0.1f) * triangleModel;
-
-			simpleTechnique.Enable();
-			simpleTechnique.SetViewProjection(triangleModel * Matrix4(cameraPosition * -1.0f) * Matrix4::PerspectiveProjectionMatrix(30.0f, 1.6f, 10.0f, 1000.0f));
-
-			glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
-			glBufferData(GL_ARRAY_BUFFER, triangleVertices.size() * sizeof(Vector4), &triangleVertices.front(), GL_DYNAMIC_DRAW);
-			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-			//glDrawArrays(GL_TRIANGLES, 0, triangleVertices.size());
+			Vector4 v(0, 0, 0, 1000);
+			float x = v.length3();
 
 			Renderer->Render();
 
-			int error = glGetError();
+			++frameCounter;
 		}
 	}
 
+	delete Renderer;
 	return (int) msg.wParam;
 }
 
