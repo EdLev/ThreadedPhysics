@@ -2,6 +2,8 @@
 
 in vec2 TexCoord;
 in vec4 Color;
+in float Depth;
+
 out vec4 FragColor;
 
 void main()
@@ -14,5 +16,6 @@ void main()
         discard;
    }
 
-    FragColor = vec4( Color.xyz - dist, 1.0 );
+    FragColor = vec4( Color - dist );
+    gl_FragDepth = -Depth;
 } 

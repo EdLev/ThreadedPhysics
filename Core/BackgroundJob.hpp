@@ -1,13 +1,13 @@
 #include <vector>
 #include <atomic>
 #include <thread>
-#include <mutex>
 
 //a pool of threads dedicated to running a particular function on a buffer of data
 template <class InputDataContainerType, class OutputDataContainerType, class FunctionType, class ExtraObjectType>
 class BackgroundJob
 {
 public:
+	//double-pointers so the application can manage which buffers we read/write
 	BackgroundJob(unsigned int NumThreads, InputDataContainerType** InInputBuffer, OutputDataContainerType** InOutputBuffer, FunctionType InInnerFunction, ExtraObjectType* ExtraObject)
 		:	InputBuffer( InInputBuffer ),
 			OutputBuffer( InOutputBuffer ),
@@ -32,8 +32,8 @@ public:
 	{
 		bShutdown = true;
 
-		//wait for threads to return
-		while (NumFinishedThreads < BackgroundThreads.size())
+		//wait for threads to finish to prevent them from accessing deallocated memory after we're destroyed
+		while (NumShutdownThreads < BackgroundThreads.size())
 		{
 			std::this_thread::yield();
 		}
@@ -63,11 +63,12 @@ private:
 				size_t currentIndex;
 				while ((currentIndex = CurrentDataIndex++) < (**InputBuffer).size())
 				{
-					InnerFunction(InputBuffer, OutputBuffer, currentIndex, ExtraObject);
+					InnerFunction(InputBuffer, OutputBuffer, currentIndex, ExtraObject);	
 
 					if (currentIndex == (**InputBuffer).size() - 1)
 					{
 						bFinished = true;
+						break;
 					}
 				}
 				
@@ -78,15 +79,16 @@ private:
 
 				//yield if we're out of the loop, to avoid spending time aggressively checking array bounds if we've finished
 				std::this_thread::yield();
-
 			}
 			else
 			{
+				//yield to other threads while we wait for our turn
 				std::this_thread::yield();
 			}
 		}
 
-		++NumFinishedThreads;
+		//signal the main thread that this thread is done
+		++NumShutdownThreads;
 	}
 
 	std::vector<std::thread> BackgroundThreads;
@@ -95,7 +97,7 @@ private:
 	std::atomic<bool> bShutdown;
 	std::atomic<bool> bDoWork;
 	std::atomic<bool> bFinished;
-	std::atomic<unsigned int> NumFinishedThreads;
+	std::atomic<unsigned int> NumShutdownThreads;
 
 	FunctionType* InnerFunction;
 

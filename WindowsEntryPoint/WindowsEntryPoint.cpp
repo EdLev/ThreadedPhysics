@@ -35,8 +35,8 @@ public:
 		ViewProjectionIndex = glGetUniformLocation(ProgramIndex, "gVP");
 		CameraPositionIndex = glGetUniformLocation(ProgramIndex, "gCameraPos");
 
-		//glEnable(GL_DEPTH_TEST);
-		//glDepthFunc(GL_LESS);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
 
 		return true;
 	}
@@ -111,13 +111,13 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINDOWSENTRYPOINT));
 
 	SphereParticleTechnique spriteTechnique;
-	PhysicsManager physicsManager(4);
+	PhysicsManager physicsManager(1);
 
 	default_random_engine engine( 0/*chrono::high_resolution_clock::now().time_since_epoch().count() */);
 	uniform_real_distribution<float> positionDist(-500.0f, 500.0f);
 	uniform_real_distribution<float> velocityDist(-10.0f, 10.0f);
 
-	const int numSpheres = 50;
+	const int numSpheres = 100;
 	for (int i = 0; i < numSpheres; ++i)
 	{
 		physicsManager.AddCollisionObject(	Vector4(positionDist(engine), positionDist(engine), positionDist(engine)),
@@ -192,8 +192,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			//cameraPosition.X = 1000;
 
 			spriteTechnique.Enable();
-			//spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(45, 1.6f, 10, 1000));
-			spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrix(-500, 500, 500, -500, -500, 500));
+			spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(45, 1.6f, 10, 1000));
+			//spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrix(-500, 500, 500, -500, -500, 500));
 			spriteTechnique.SetCameraPosition(cameraPosition);
 
 			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), 0);
@@ -203,9 +203,6 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			glBufferData(GL_ARRAY_BUFFER, sprites.size() * sizeof(SphereSprite), &sprites.front(), GL_DYNAMIC_DRAW);
 
 			glDrawArrays(GL_POINTS, 0, sprites.size());
-
-			Vector4 v(0, 0, 0, 1000);
-			float x = v.length3();
 
 			Renderer->Render();
 

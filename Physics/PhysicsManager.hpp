@@ -43,15 +43,10 @@ namespace Physics
 	private:
 
 		bool DetectCollisions();
-		//void DetectCollisionsWorkerFunction();
-
 		void ResolveCollisions();
-		void ResolveCollisionsWorkerFunction();
-
 		void ApplyAccelerationsAndImpulses();
 
 		void ApplyVelocities();
-		void ApplyVelocitiesWorkerFunction();
 
 		void SwapPhysicsStateBuffers();
 		void FinishFrame();
@@ -64,8 +59,9 @@ namespace Physics
 
 		//front and back buffers for threading
 		simd_vector<PhysicsState> PhysicsStateBuffers[2];
-		simd_vector<PhysicsState>* CurrentStateBuffer;
-		int CurrentStateBufferIndex;
+		simd_vector<PhysicsState>* StateFrontBuffer;
+		simd_vector<PhysicsState>* StateBackBuffer;
+		int StateFrontBufferIndex;
 
 		//lock when swapping buffers and when copying out the current state
 		std::mutex CurrentBufferMutex;
@@ -74,30 +70,13 @@ namespace Physics
 
 		std::vector<std::pair<CollisionObject*, CollisionObject*>> CollisionPairs;
 		decltype(CollisionPairs)* CurrentPairsBuffer;
-		std::mutex PairsMutex;
-
-		int NumWorkerThreads;
-		std::vector<std::thread> WorkerThreads;
-
-		//signal threads to return
-		bool bShutdown;
-
-		//used by threads to determine which object to fetch
-		std::atomic<unsigned int> CurrentCollisionPairIndex;
-		std::atomic<unsigned int> CurrentPhysicsStateIndex;
-
-		//flags to enable worker threads and have them report their status
-		bool bResolveCollisions;
-		bool bFinishedResolvingCollisions;
-		bool bApplyAccelerations;
-		bool bFinishedApplyingAccelerations;
-		bool bApplyVelocities;
-		bool bFinishedApplyingVelocities;
-
-		std::atomic<unsigned int> NumFinishedThreads;
 
 		friend void DetectCollisionsWorkerFunction(decltype(CollisionObjects)**, decltype(CollisionPairs)**, size_t, PhysicsManager*);
+		friend void ResolveCollisionsWorkerFunction(decltype(CollisionPairs)**, decltype(StateFrontBuffer)*, size_t, PhysicsManager*);
+		friend void ApplyVelocitiesWorkerFunction(decltype(StateFrontBuffer)*, decltype(StateFrontBuffer)*, size_t, PhysicsManager*);
 
 		BackgroundJob<decltype(CollisionObjects), decltype(CollisionPairs), decltype(DetectCollisionsWorkerFunction), PhysicsManager> CollisionDetectionJob;
+		BackgroundJob<decltype(CollisionPairs), simd_vector<PhysicsState>, decltype(ResolveCollisionsWorkerFunction), PhysicsManager> CollisionResolutionJob;
+		BackgroundJob<simd_vector<PhysicsState>, simd_vector<PhysicsState>, decltype(ApplyVelocitiesWorkerFunction), PhysicsManager> ApplyVelocitiesJob;
 	};
 }

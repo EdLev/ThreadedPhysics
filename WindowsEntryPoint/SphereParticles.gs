@@ -12,40 +12,46 @@ in vec4 VertexColor[];
 out vec4 Color;
 out vec2 TexCoord;
 
+out float Depth;
+
 void main()
 {
-	vec3 Pos = gl_in[0].gl_Position.xyz;
+	vec4 Pos = vec4( gl_in[0].gl_Position.xyz, 1.0 );
 	float Size = gl_in[0].gl_PointSize;
 
-	//vec3 toCamera = vec3(0.0,0.0,1.0);//normalize(gCameraPos.xyz - Pos);
-	vec3 up = vec3(0.0, 1.0, 0.0);
-	vec3 right = vec3(1.0, 0.0, 0.0);//normalize(cross(up, toCamera));
+	//vec4 toCamera = vec3(0.0,0.0,1.0);//normalize(gCameraPos - Pos);
+	vec4 up = vec4(0.0, 1.0, 0.0, 0.0);
+	vec4 right = vec4(1.0, 0.0, 0.0, 0.0);//normalize(cross(up, toCamera));
 	//up = normalize(cross(toCamera, right));
 
 	Pos -= right * Size;
 	Pos += up * Size;
-	gl_Position = gVP * vec4(Pos, 1.0);
+	gl_Position = gVP * Pos;
 	TexCoord = vec2(0.0, 0.0);
 	Color = VertexColor[0];
+	Depth = Pos.z / 1000;
 	EmitVertex();
 
 	Pos += 2.0 * right * Size;
-	gl_Position = gVP * vec4(Pos, 1.0);
+	gl_Position = gVP * Pos;
 	TexCoord = vec2(0.0, 1.0);
 	Color = VertexColor[0];
+	Depth = Pos.z / 1000;
 	EmitVertex();
 
 	Pos -= 2.0 * up * Size;
 	Pos -= 2.0 * right * Size;
-	gl_Position = gVP * vec4(Pos, 1.0);
+	gl_Position = gVP * Pos;
 	TexCoord = vec2(1.0, 0.0);
 	Color = VertexColor[0];
+	Depth = Pos.z / 1000;
 	EmitVertex();
 
 	Pos += 2.0 * right * Size;
-	gl_Position = gVP * vec4(Pos, 1.0);
+	gl_Position = gVP * Pos;
 	TexCoord = vec2(1.0, 1.0);
 	Color = VertexColor[0];
+	Depth = Pos.z / 1000;
 	EmitVertex();
 
 

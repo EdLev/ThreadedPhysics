@@ -8,7 +8,7 @@ out vec4 VertexColor;
 
 void main()
 {
-    gl_Position = vec4(Position.xyz, 1.0);
+    gl_Position = Position;
 	gl_PointSize = Radius;
 	VertexColor = InColor;
 }
