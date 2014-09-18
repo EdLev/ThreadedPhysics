@@ -31,3 +31,4 @@ Long term:
 - Swept shape collision (will probably require some rethinking of order of operations)
 - Arbitrary (skinned?) mesh collision
 - Constraints
+- Platform-agnostic renderer and test app
