@@ -25,7 +25,7 @@ namespace Physics
 	PhysicsManager::~PhysicsManager()
 	{}
 
-	bool PhysicsManager::PhysicsFrame(float deltaTime)
+	bool PhysicsManager::RunFrame(float deltaTime)
 	{
 		CurrentdeltaTime = deltaTime;
 

@@ -160,7 +160,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			chrono::duration<float> interval(chrono::high_resolution_clock::now() - lastTime);
 			lastTime = chrono::high_resolution_clock::now();
 
-			physicsManager.PhysicsFrame( interval.count() );
+			physicsManager.RunFrame( interval.count() );
 
 			second += interval;
 

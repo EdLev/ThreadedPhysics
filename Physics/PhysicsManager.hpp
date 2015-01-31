@@ -33,7 +33,7 @@ namespace Physics
 		PhysicsManager(PhysicsManager&& other) = delete;
 		~PhysicsManager();
 
-		bool PhysicsFrame( float deltaTime );
+		bool RunFrame( float deltaTime );
 
 		void AddCollisionObject( Core::Vector4& position, Core::Vector4& velocity, float radius );
 
