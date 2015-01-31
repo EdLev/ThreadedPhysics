@@ -27,7 +27,7 @@
     <ClInclude Include="AlignedAllocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BackgroundJob.hpp">
+    <ClInclude Include="Task.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

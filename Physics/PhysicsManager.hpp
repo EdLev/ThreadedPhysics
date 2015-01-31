@@ -5,7 +5,7 @@
 
 #include "../Core/Matrix4.hpp"
 #include "../Core/AlignedAllocator.hpp"
-#include "../Core/BackgroundJob.hpp"
+#include "../Core/Task.hpp"
 
 namespace Physics
 {
@@ -75,8 +75,8 @@ namespace Physics
 		friend void ResolveCollisionsWorkerFunction(decltype(CollisionPairs)**, decltype(StateFrontBuffer)*, size_t, PhysicsManager*);
 		friend void ApplyVelocitiesWorkerFunction(decltype(StateFrontBuffer)*, decltype(StateFrontBuffer)*, size_t, PhysicsManager*);
 
-		BackgroundJob<decltype(CollisionObjects), decltype(CollisionPairs), decltype(DetectCollisionsWorkerFunction), PhysicsManager> CollisionDetectionJob;
-		BackgroundJob<decltype(CollisionPairs), simd_vector<PhysicsState>, decltype(ResolveCollisionsWorkerFunction), PhysicsManager> CollisionResolutionJob;
-		BackgroundJob<simd_vector<PhysicsState>, simd_vector<PhysicsState>, decltype(ApplyVelocitiesWorkerFunction), PhysicsManager> ApplyVelocitiesJob;
+		Task<decltype(CollisionObjects), decltype(CollisionPairs), decltype(DetectCollisionsWorkerFunction), PhysicsManager> CollisionDetectionJob;
+		Task<decltype(CollisionPairs), simd_vector<PhysicsState>, decltype(ResolveCollisionsWorkerFunction), PhysicsManager> CollisionResolutionJob;
+		Task<simd_vector<PhysicsState>, simd_vector<PhysicsState>, decltype(ApplyVelocitiesWorkerFunction), PhysicsManager> ApplyVelocitiesJob;
 	};
 }

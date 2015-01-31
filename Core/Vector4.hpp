@@ -3,7 +3,7 @@
 #include "Assert.hpp"
 #include <intrin.h>
 
-#if 1 && (_WIN32 || _WIN64 || _LINUX)
+#if (_WIN32 || _WIN64 || _LINUX)
 #define VECTORIZATION_SSE
 #else
 #define VECTORIZATION_NONE

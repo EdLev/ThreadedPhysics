@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClInclude Include="AlignedAllocator.hpp" />
     <ClInclude Include="Assert.hpp" />
-    <ClInclude Include="BackgroundJob.hpp" />
+    <ClInclude Include="Task.hpp" />
     <ClInclude Include="Matrix4.hpp" />
     <ClInclude Include="Vector4.hpp" />
   </ItemGroup>

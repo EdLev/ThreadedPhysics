@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj", "{746E40DF-C66A-4E3A-AAC7-D1298D810144}"
 EndProject
@@ -14,6 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WindowsEntryPoint", "Window
 	ProjectSection(ProjectDependencies) = postProject
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17} = {44F99342-BB11-4DA0-9A8C-9F3065D70F17}
 		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18} = {2E39E0B2-8C75-4A93-9419-8D4F436BAA18}
+		{746E40DF-C66A-4E3A-AAC7-D1298D810144} = {746E40DF-C66A-4E3A-AAC7-D1298D810144}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGLRenderer", "OpenGLRenderer\OpenGLRenderer.vcxproj", "{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}"
@@ -33,37 +34,38 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Debug|Win32.ActiveCfg = Debug|Win32
 		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Debug|Win32.Build.0 = Debug|Win32
-		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Debug|x64.ActiveCfg = Debug|x64
-		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Debug|x64.Build.0 = Debug|x64
+		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Debug|x64.ActiveCfg = Release|x64
+		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Debug|x64.Build.0 = Release|x64
 		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Release|Win32.ActiveCfg = Release|Win32
 		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Release|Win32.Build.0 = Release|Win32
 		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Release|x64.ActiveCfg = Release|x64
 		{746E40DF-C66A-4E3A-AAC7-D1298D810144}.Release|x64.Build.0 = Release|x64
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Debug|Win32.ActiveCfg = Debug|Win32
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Debug|Win32.Build.0 = Debug|Win32
-		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Debug|x64.ActiveCfg = Debug|x64
-		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Debug|x64.Build.0 = Debug|x64
+		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Debug|x64.ActiveCfg = Release|x64
+		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Debug|x64.Build.0 = Release|x64
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Release|Win32.ActiveCfg = Release|Win32
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Release|Win32.Build.0 = Release|Win32
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Release|x64.ActiveCfg = Release|x64
 		{44F99342-BB11-4DA0-9A8C-9F3065D70F17}.Release|x64.Build.0 = Release|x64
 		{7E610D29-5C95-487F-BF04-643C59B51279}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7E610D29-5C95-487F-BF04-643C59B51279}.Debug|Win32.Build.0 = Debug|Win32
-		{7E610D29-5C95-487F-BF04-643C59B51279}.Debug|x64.ActiveCfg = Debug|Win32
+		{7E610D29-5C95-487F-BF04-643C59B51279}.Debug|x64.ActiveCfg = Release|Win32
+		{7E610D29-5C95-487F-BF04-643C59B51279}.Debug|x64.Build.0 = Release|Win32
 		{7E610D29-5C95-487F-BF04-643C59B51279}.Release|Win32.ActiveCfg = Release|Win32
 		{7E610D29-5C95-487F-BF04-643C59B51279}.Release|Win32.Build.0 = Release|Win32
 		{7E610D29-5C95-487F-BF04-643C59B51279}.Release|x64.ActiveCfg = Release|Win32
+		{7E610D29-5C95-487F-BF04-643C59B51279}.Release|x64.Build.0 = Release|Win32
 		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Debug|Win32.Build.0 = Debug|Win32
-		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Debug|x64.ActiveCfg = Debug|Win32
+		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Debug|x64.ActiveCfg = Release|Win32
+		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Debug|x64.Build.0 = Release|Win32
 		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Release|Win32.ActiveCfg = Release|Win32
 		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Release|Win32.Build.0 = Release|Win32
 		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Release|x64.ActiveCfg = Release|Win32
+		{2E39E0B2-8C75-4A93-9419-8D4F436BAA18}.Release|x64.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

@@ -4,11 +4,11 @@
 
 //a pool of threads dedicated to running a particular function on a buffer of data
 template <class InputDataContainerType, class OutputDataContainerType, class FunctionType, class ExtraObjectType>
-class BackgroundJob
+class Task
 {
 public:
 	//double-pointers so the application can manage which buffers we read/write
-	BackgroundJob(unsigned int NumThreads, InputDataContainerType** InInputBuffer, OutputDataContainerType** InOutputBuffer, FunctionType InInnerFunction, ExtraObjectType* ExtraObject)
+	Task(unsigned int NumThreads, InputDataContainerType** InInputBuffer, OutputDataContainerType** InOutputBuffer, FunctionType InInnerFunction, ExtraObjectType* ExtraObject)
 		:	InputBuffer( InInputBuffer ),
 			OutputBuffer( InOutputBuffer ),
 			InnerFunction( InInnerFunction ),
@@ -19,7 +19,7 @@ public:
 	{
 		for (size_t threadIndex = 0; threadIndex < NumThreads; ++threadIndex )
 		{
-			BackgroundThreads.push_back(std::thread(&BackgroundJob::ThreadWork, this, ExtraObject));
+			BackgroundThreads.push_back(std::thread(&Task::ThreadWork, this, ExtraObject));
 		}
 
 		for (auto& thread : BackgroundThreads)
@@ -28,7 +28,7 @@ public:
 		}
 	}
 
-	~BackgroundJob()
+	~Task()
 	{
 		bShutdown = true;
 
