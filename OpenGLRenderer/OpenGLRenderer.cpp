@@ -66,7 +66,7 @@ namespace Rendering
 
 	void OpenGLRenderer::PrepareScene()
 	{
-		glClearColor(0.4f, 0.6f, 0.9f, 0.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
 	void OpenGLRenderer::ResizeViewport(int width, int height)

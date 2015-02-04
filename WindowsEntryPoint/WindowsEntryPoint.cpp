@@ -24,6 +24,10 @@ public:
 
 	virtual bool Setup()
 	{
+		GLuint vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+
 		AddShader(GL_VERTEX_SHADER, "SphereParticles.vs");
 		AddShader(GL_GEOMETRY_SHADER, "SphereParticles.gs");
 		AddShader(GL_FRAGMENT_SHADER, "SphereParticles.fs");
@@ -111,18 +115,18 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINDOWSENTRYPOINT));
 
 	SphereParticleTechnique spriteTechnique;
-	PhysicsManager physicsManager(1);
+	PhysicsManager physicsManager(16);
 
 	default_random_engine engine( 0/*chrono::high_resolution_clock::now().time_since_epoch().count() */);
 	uniform_real_distribution<float> positionDist(-500.0f, 500.0f);
 	uniform_real_distribution<float> velocityDist(-10.0f, 10.0f);
 
-	const int numSpheres = 100;
+	const int numSpheres = 5000;
 	for (int i = 0; i < numSpheres; ++i)
 	{
 		physicsManager.AddCollisionObject(	Vector4(positionDist(engine), positionDist(engine), positionDist(engine)),
 											Vector4(velocityDist(engine), velocityDist(engine), velocityDist(engine)),
-											50.0f);
+											5.0f);
 	}
 
 	unsigned int spriteVBO;
@@ -157,12 +161,19 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			simd_vector<CollisionObject> collisionObjects;
 			simd_vector<SphereSprite> sprites;
 
-			chrono::duration<float> interval(chrono::high_resolution_clock::now() - lastTime);
-			lastTime = chrono::high_resolution_clock::now();
+			chrono::duration<float> frame(0);
 
-			physicsManager.RunFrame( interval.count() );
-
-			second += interval;
+			while (frame.count() < 1.0f / 60.0f)
+			{
+				chrono::duration<float> interval(chrono::high_resolution_clock::now() - lastTime);
+				lastTime = chrono::high_resolution_clock::now();
+				physicsManager.RunFrame(interval.count());
+				frame += interval;
+				second += interval;
+				++frameCounter;
+			}
+			
+			frame = frame.zero();
 
 			char str[16];
 
@@ -206,7 +217,6 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 			Renderer->Render();
 
-			++frameCounter;
 		}
 	}
 

@@ -16,6 +16,6 @@ void main()
         discard;
    }
 
-    FragColor = vec4( Color - dist );
+    FragColor = Color;
     gl_FragDepth = -Depth;
 } 
