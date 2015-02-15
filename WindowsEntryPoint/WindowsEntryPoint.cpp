@@ -200,10 +200,10 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			//sprites
 			glBindBuffer(GL_ARRAY_BUFFER, spriteVBO);
 
-			//cameraPosition.X = 1000;
+			cameraPosition.Z = -5000;
 
 			spriteTechnique.Enable();
-			spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(45, 1.6f, 10, 1000));
+			spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(1.0f, 1.6f, 10, 10000));
 			//spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrix(-500, 500, 500, -500, -500, 500));
 			spriteTechnique.SetCameraPosition(cameraPosition);
 

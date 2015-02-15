@@ -1,6 +1,7 @@
+#pragma once
+
 #include <vector>
 #include <atomic>
-#include <thread>
 
 //a pool of threads dedicated to running a particular function on a buffer of data
 template <class InputDataContainerType, class OutputDataContainerType, class FunctionType, class ExtraObjectType>
@@ -8,10 +9,9 @@ class Task
 {
 public:
 	//double-pointers so the application can manage which buffers we read/write
-	Task(unsigned int NumThreads, InputDataContainerType** InInputBuffer, OutputDataContainerType** InOutputBuffer, FunctionType InInnerFunction, ExtraObjectType* ExtraObject)
+	Task(unsigned int NumThreads, InputDataContainerType** InInputBuffer, OutputDataContainerType** InOutputBuffer, ExtraObjectType* ExtraObject)
 		:	InputBuffer( InInputBuffer ),
 			OutputBuffer( InOutputBuffer ),
-			InnerFunction( InInnerFunction ),
 			bShutdown( false ),
 			bFinished( false ),
 			bDoWork( false ),
@@ -99,7 +99,7 @@ private:
 	std::atomic<bool> bFinished;
 	std::atomic<unsigned int> NumShutdownThreads;
 
-	FunctionType* InnerFunction;
+	FunctionType InnerFunction;
 
 	InputDataContainerType** InputBuffer;
 	OutputDataContainerType** OutputBuffer;

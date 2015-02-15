@@ -19,10 +19,10 @@ void main()
 	vec4 Pos = vec4( gl_in[0].gl_Position.xyz, 1.0 );
 	float Size = gl_in[0].gl_PointSize;
 
-	//vec4 toCamera = vec3(0.0,0.0,1.0);//normalize(gCameraPos - Pos);
+	vec4 toCamera = normalize(gCameraPos - -Pos);
 	vec4 up = vec4(0.0, 1.0, 0.0, 0.0);
-	vec4 right = vec4(1.0, 0.0, 0.0, 0.0);//normalize(cross(up, toCamera));
-	//up = normalize(cross(toCamera, right));
+	vec4 right = vec4(normalize(cross(up.xyz, toCamera.xyz)),0.0);
+	up = vec4(normalize(cross(toCamera.xyz, right.xyz)),0.0f);
 
 	Pos -= right * Size;
 	Pos += up * Size;

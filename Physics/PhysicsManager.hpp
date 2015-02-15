@@ -1,29 +1,20 @@
+#pragma once
+
 #include <vector>
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <random>
 
 #include "../Core/Matrix4.hpp"
 #include "../Core/AlignedAllocator.hpp"
 #include "../Core/Task.hpp"
 
+#include "../Physics/Types.hpp"
+#include "../Physics/TaskFunctions.hpp"
+
 namespace Physics
 {
-	struct PhysicsState
-	{
-		Core::Vector4 Position;
-		Core::Vector4 Velocity;
-	};
-
-	struct CollisionObject
-	{
-		//index into the current state buffer
-		size_t PhysicsStateIndex;
-		Core::Vector4 Color;
-		//just spheres for now, subclass for other shapes later (CollidesWith(other) method)
-		float Radius;
-	};
-
 	class PhysicsManager
 	{
 	public:
@@ -71,12 +62,12 @@ namespace Physics
 		std::vector<std::pair<CollisionObject*, CollisionObject*>> CollisionPairs;
 		decltype(CollisionPairs)* CurrentPairsBuffer;
 
-		friend void DetectCollisionsWorkerFunction(decltype(CollisionObjects)**, decltype(CollisionPairs)**, size_t, PhysicsManager*);
-		friend void ResolveCollisionsWorkerFunction(decltype(CollisionPairs)**, decltype(StateFrontBuffer)*, size_t, PhysicsManager*);
-		friend void ApplyVelocitiesWorkerFunction(decltype(StateFrontBuffer)*, decltype(StateFrontBuffer)*, size_t, PhysicsManager*);
+		friend struct DetectCollisionsWorkerFunction;
+		friend struct ResolveCollisionsWorkerFunction;
+		friend struct ApplyVelocitiesWorkerFunction;
 
-		Task<decltype(CollisionObjects), decltype(CollisionPairs), decltype(DetectCollisionsWorkerFunction), PhysicsManager> CollisionDetectionJob;
-		Task<decltype(CollisionPairs), simd_vector<PhysicsState>, decltype(ResolveCollisionsWorkerFunction), PhysicsManager> CollisionResolutionJob;
-		Task<simd_vector<PhysicsState>, simd_vector<PhysicsState>, decltype(ApplyVelocitiesWorkerFunction), PhysicsManager> ApplyVelocitiesJob;
+		Task<decltype(CollisionObjects), decltype(CollisionPairs), DetectCollisionsWorkerFunction, PhysicsManager> CollisionDetectionJob;
+		Task<decltype(CollisionPairs), simd_vector<PhysicsState>, ResolveCollisionsWorkerFunction, PhysicsManager> CollisionResolutionJob;
+		Task<simd_vector<PhysicsState>, simd_vector<PhysicsState>, ApplyVelocitiesWorkerFunction, PhysicsManager> ApplyVelocitiesJob;
 	};
 }

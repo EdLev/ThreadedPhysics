@@ -7,6 +7,8 @@
 * <http://blogs.msdn.com/b/vcblog/archive/2008/08/28/the-mallocator.aspx>
 */
 
+#pragma once
+
 #include <vector>
 
 template <typename T, std::size_t Alignment>
@@ -116,5 +118,3 @@ public:
 private:
 	aligned_allocator& operator=(const aligned_allocator&);
 };
-
-template<typename value_type> using simd_vector = std::vector<value_type, aligned_allocator<value_type, 16>>;
