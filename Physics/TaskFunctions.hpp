@@ -7,10 +7,12 @@
 
 namespace Physics
 {
+	class PhysicsManager;
+
 	struct DetectCollisionsWorkerFunction
 	{
 		std::mutex PairsMutex;
-		void operator () (simd_vector<CollisionObject>** CollisionObjects, std::vector<std::pair<CollisionObject*, CollisionObject*>>** CollisionPairs, size_t CollisionObjectIndex, class PhysicsManager* Manager);
+		void operator () (simd_vector<CollisionObject>** CollisionObjects, std::vector<std::pair<CollisionObject*, CollisionObject*>>** CollisionPairs, size_t CollisionObjectIndex, PhysicsManager* Manager);
 	};
 
 	struct ResolveCollisionsWorkerFunction
