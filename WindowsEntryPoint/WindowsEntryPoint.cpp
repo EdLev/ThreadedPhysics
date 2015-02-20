@@ -187,6 +187,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 			physicsManager.CopyCurrentPhysicsState(physicsState);
 			physicsManager.CopyCollisionObjects(collisionObjects);
+			sprites.reserve(numSpheres);
 
 			transform(physicsState.begin(), physicsState.end(), collisionObjects.begin(), back_inserter(sprites),
 				[](const PhysicsState& state, const CollisionObject& object)->SphereSprite
@@ -200,10 +201,10 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			//sprites
 			glBindBuffer(GL_ARRAY_BUFFER, spriteVBO);
 
-			cameraPosition.Z = -5000;
+			cameraPosition.Z = -500;
 
 			spriteTechnique.Enable();
-			spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(1.0f, 1.6f, 10, 10000));
+			spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(10.0f, 1.6f, 10, 10000));
 			//spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrix(-500, 500, 500, -500, -500, 500));
 			spriteTechnique.SetCameraPosition(cameraPosition);
 

@@ -124,11 +124,13 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Octree.hpp" />
     <ClInclude Include="PhysicsManager.hpp" />
     <ClInclude Include="TaskFunctions.hpp" />
     <ClInclude Include="Types.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Octree.cpp" />
     <ClCompile Include="PhysicsManager.cpp" />
     <ClCompile Include="TaskFunctions.cpp" />
   </ItemGroup>
