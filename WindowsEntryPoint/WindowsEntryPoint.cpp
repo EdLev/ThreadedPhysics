@@ -3,12 +3,15 @@
 
 #include "stdafx.h"
 #include "WindowsEntryPoint.h"
+
+#include <GL/glew.h>
+#include <GL/wglew.h>
+
 #include "../OpenGLRenderer/Technique.hpp"
 #include "../OpenGLRenderer/OpenGLRenderer.hpp"
 #include "../Physics/PhysicsManager.hpp"
 
-#include <GL/glew.h>
-#include <GL/wglew.h>
+#include "../Physics/Octree.hpp"
 
 using namespace std;
 using namespace Core;
@@ -128,6 +131,11 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 											Vector4(velocityDist(engine), velocityDist(engine), velocityDist(engine)),
 											5.0f);
 	}
+
+	simd_vector<CollisionObject> obj;
+	simd_vector<PhysicsState> st;
+	physicsManager.CopyCollisionObjects(obj);
+	physicsManager.CopyCurrentPhysicsState(st);
 
 	unsigned int spriteVBO;
 	glGenBuffers(1, &spriteVBO);

@@ -4,8 +4,6 @@
 #include <sstream>
 #include <algorithm>
 
-#include <Windows.h>
-
 namespace Physics
 {
 	using namespace Core;
@@ -18,7 +16,8 @@ namespace Physics
 		CurrentPairsBuffer( &CollisionPairs ),
 		CollisionDetectionJob( NumThreads, &CurrentObjectBuffer, &CurrentPairsBuffer, this ),
 		CollisionResolutionJob( NumThreads, &CurrentPairsBuffer, &StateFrontBuffer, this ),
-		ApplyVelocitiesJob( NumThreads, &StateFrontBuffer, &StateBackBuffer, this )
+		ApplyVelocitiesJob( NumThreads, &StateFrontBuffer, &StateBackBuffer, this ),
+		CollisionOctree(500)
 	{}
 
 	PhysicsManager::~PhysicsManager()
@@ -30,6 +29,8 @@ namespace Physics
 
 		//copy current state to back buffer
 		PhysicsStateBuffers[!StateFrontBufferIndex] = *StateFrontBuffer;
+
+		CollisionOctree.Rebuild(*CurrentObjectBuffer, *StateFrontBuffer);
 
 		bool result = DetectCollisions();
 		ResolveCollisions();

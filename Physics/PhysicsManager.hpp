@@ -10,8 +10,9 @@
 #include "../Core/AlignedAllocator.hpp"
 #include "../Core/Task.hpp"
 
-#include "../Physics/Types.hpp"
-#include "../Physics/TaskFunctions.hpp"
+#include "Types.hpp"
+#include "TaskFunctions.hpp"
+#include "Octree.hpp"
 
 namespace Physics
 {
@@ -69,5 +70,7 @@ namespace Physics
 		Task<decltype(CollisionObjects), decltype(CollisionPairs), DetectCollisionsWorkerFunction, PhysicsManager> CollisionDetectionJob;
 		Task<decltype(CollisionPairs), simd_vector<PhysicsState>, ResolveCollisionsWorkerFunction, PhysicsManager> CollisionResolutionJob;
 		Task<simd_vector<PhysicsState>, simd_vector<PhysicsState>, ApplyVelocitiesWorkerFunction, PhysicsManager> ApplyVelocitiesJob;
+
+		Octree CollisionOctree;
 	};
 }
