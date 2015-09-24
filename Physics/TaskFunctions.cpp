@@ -5,27 +5,28 @@
 
 namespace Physics
 {
-	void DetectCollisionsWorkerFunction::operator() (simd_vector<PhysicsObject>** CollisionObjects, std::vector<std::pair<size_t, size_t>>** CollisionPairs, size_t CollisionObjectIndex, PhysicsManager* Manager)
+	void DetectCollisionsWorkerFunction::operator() (simd_vector<PhysicsObject>** CollisionObjects, std::vector<CollisionPair>** CollisionPairs, size_t CollisionObjectIndex, PhysicsManager* Manager)
 	{
 		PhysicsObject& first = (**CollisionObjects)[CollisionObjectIndex];
 
-		auto& currentPhysicsBuffer = *(Manager->StateFrontBuffer);
-
 		int stateIndex = 0;
-		for (auto& second : **CollisionObjects)
+		
+		std::vector<PhysicsObject*> potentialColliders;
+		Manager->CollisionOctree.GetPotentialColliders(first.Position, first.CollisionRadius, potentialColliders);
+		for (auto second : potentialColliders)
 		{
 			//don't check it against itself
-			if (&first == &second)
+			if (&first == second)
 			{
 				continue;
 			}
 			
-			const float distanceSquared = (first.Position - second.Position).length3Squared();
-			const float totalRadiusSquared = (first.CollisionRadius + second.CollisionRadius) * (first.CollisionRadius + second.CollisionRadius);
+			const float distanceSquared = (first.Position - second->Position).length3Squared();
+			const float totalRadiusSquared = (first.CollisionRadius + second->CollisionRadius) * (first.CollisionRadius + second->CollisionRadius);
 			if (distanceSquared < totalRadiusSquared)
 			{
 				PairsMutex.lock();
-				(**CollisionPairs).push_back(std::make_pair(CollisionObjectIndex, stateIndex));
+				(**CollisionPairs).push_back(std::make_pair(&first, second));
 				PairsMutex.unlock();
 			}
 			++stateIndex;
@@ -39,26 +40,26 @@ namespace Physics
 		auto& frontBuffer = *Manager->StateFrontBuffer;
 		auto& collisionPair = (**CollisionPairs)[PairIndex];
 
-		auto& firstObject = frontBuffer[collisionPair.first];
-		auto& secondObject = frontBuffer[collisionPair.second];
+		auto firstObject = collisionPair.first;
+		auto secondObject = collisionPair.second;
 
 		//from second to first
-		Vector4 collisionNormal = (firstObject.Position - secondObject.Position).getNormalized3();
+		Vector4 collisionNormal = (firstObject->Position - secondObject->Position).getNormalized3();
 
 		//only do anything if they're approaching each other (avoid oscillation between interpenetrating spheres)
-		if (firstObject.Velocity.dot3(collisionNormal) - secondObject.Velocity.dot3(collisionNormal) < 0.0f)
+		if (firstObject->Velocity.dot3(collisionNormal) - secondObject->Velocity.dot3(collisionNormal) < 0.0f)
 		{
-			float a1 = firstObject.Velocity.dot3(collisionNormal);
-			float a2 = secondObject.Velocity.dot3(collisionNormal);
+			float a1 = firstObject->Velocity.dot3(collisionNormal);
+			float a2 = secondObject->Velocity.dot3(collisionNormal);
 
 			float p = (2.0f * (a1 - a2)) / 2.0f /*m1 + m2, assume 1.0 mass for now*/;
 
-			backBuffer[collisionPair.first].Velocity = firstObject.Velocity - collisionNormal * p;
-			backBuffer[collisionPair.second].Velocity = secondObject.Velocity + collisionNormal * p;
+			backBuffer[firstObject->Index].Velocity = firstObject->Velocity - collisionNormal * p;
+			backBuffer[secondObject->Index].Velocity = secondObject->Velocity + collisionNormal * p;
 
 			Vector4 color(colorDist(RandomEngine), colorDist(RandomEngine), colorDist(RandomEngine), 1.0f);
-			backBuffer[collisionPair.first].Color = color;
-			backBuffer[collisionPair.second].Color = color;
+			backBuffer[firstObject->Index].Color = color;
+			backBuffer[secondObject->Index].Color = color;
 		}
 	}
 

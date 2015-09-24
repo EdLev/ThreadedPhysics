@@ -1,5 +1,9 @@
 #include "BoundingBox.hpp"
 
+Core::BoundingBox::BoundingBox()
+{
+}
+
 Core::BoundingBox::BoundingBox(const Vector4& min, const Vector4& max) :
 	Min(min),
 	Max(max)
@@ -17,8 +21,6 @@ bool Core::BoundingBox::Contains(const Vector4& center, float radius) const
 	return(	center.X - radius >= Min.X && center.X + radius < Max.X &&
 			center.Y - radius >= Min.Y && center.Y + radius < Max.Y &&
 			center.Z - radius >= Min.Z && center.Z + radius < Max.Z);
-
-	return false;
 }
 
 bool Core::BoundingBox::Contains(const BoundingBox & other) const

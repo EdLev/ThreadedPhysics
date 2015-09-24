@@ -9,15 +9,17 @@ using namespace std;
 using namespace Core;
 using namespace Physics;
 
+static const size_t NumObjects = 10000;
+
 namespace Engine
 {
 	Engine::Engine(std::shared_ptr<Rendering::OpenGLRenderer> InRenderer) :
-		PhysicsManager(16),
+		PhysicsManager(1, NumObjects),
 		Renderer(InRenderer),
 		RandomEngine((unsigned int)chrono::high_resolution_clock::now().time_since_epoch().count()),
 		PositionDist(-500.0f, 500.0f),
 		VelocityDist(-10.0f, 10.0f),
-		NumSpheres(5000)
+		NumSpheres(NumObjects)
 	{
 		for (int i = 0; i < NumSpheres; ++i)
 		{
@@ -116,8 +118,6 @@ namespace Engine
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)offsetof(SphereSprite, Position));
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)offsetof(SphereSprite, Color));
 		glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)offsetof(SphereSprite, Radius));
-
-		int glError = glGetError();
 
 		glBufferData(GL_ARRAY_BUFFER, sprites.size() * sizeof(SphereSprite), &sprites.front(), GL_DYNAMIC_DRAW);
 

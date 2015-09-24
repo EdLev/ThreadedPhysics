@@ -9,6 +9,7 @@ namespace Core
 	class BoundingBox
 	{
 	public:
+		BoundingBox();
 		BoundingBox(const Vector4& min, const Vector4& max);
 		bool Contains(const Vector4& point) const;
 		bool Contains(const Vector4& center, float radius) const;

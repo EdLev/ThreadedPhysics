@@ -17,6 +17,7 @@ namespace Physics
 		Core::Vector4 Color;
 		//just spheres for now, subclass for other shapes later (CollidesWith(other) method)
 		float CollisionRadius;
+		size_t Index; //TODO eww
 	};
 }
 

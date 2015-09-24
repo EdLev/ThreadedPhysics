@@ -28,7 +28,7 @@ namespace Physics
 		std::unique_ptr<OctreeNode> Children[8];
 		Core::Vector4 Center;
 		bool bLeaf;
-		std::vector<const PhysicsObject*> Objects;
+		std::vector<PhysicsObject*> Objects;
 		Core::BoundingBox Bounds;
 	};
 
@@ -37,14 +37,14 @@ namespace Physics
 	public:
 		Octree(const Core::BoundingBox& bounds);
 
-		void Rebuild(const simd_vector<PhysicsObject>& Objects);	
-		void AddObject(const PhysicsObject* const NewObject);
+		void Rebuild(simd_vector<PhysicsObject>& Objects);	
+		void AddObject(PhysicsObject* NewObject);
 
-		void GetPotentialColliders(Core::Vector4& Position, float Radius, std::vector<const PhysicsObject*>& OutObjects);
+		void GetPotentialColliders(Core::Vector4& Position, float Radius, std::vector<PhysicsObject*>& OutObjects);
 
 	private:
 
-		void BuildSubtree(std::unique_ptr<OctreeNode>& Node, const std::vector<const PhysicsObject*>& Objects);
+		void BuildSubtree(std::unique_ptr<OctreeNode>& Node, const std::vector<PhysicsObject*>& Objects);
 
 		std::unique_ptr<OctreeNode> Root;
 	};

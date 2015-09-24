@@ -54,6 +54,8 @@ namespace Core
 		Vector4& crossEquals(const Vector4& other);
 		Vector4 cross(const Vector4& other) const;
 
+#pragma warning(push)
+#pragma warning(disable : 4201)
 		union
 		{
 			struct
@@ -65,5 +67,6 @@ namespace Core
 			__m128 xmm;
 #endif
 		};
+#pragma warning(pop)
 	};
 }

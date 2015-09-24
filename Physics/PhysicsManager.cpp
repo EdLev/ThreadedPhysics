@@ -8,7 +8,7 @@ namespace Physics
 {
 	using namespace Core;
 
-	PhysicsManager::PhysicsManager(int NumThreads)
+	PhysicsManager::PhysicsManager(int NumThreads, size_t NumObjects)
 		: StateFrontBuffer(&PhysicsStateBuffers[0]),
 		StateBackBuffer(&PhysicsStateBuffers[1]),
 		StateFrontBufferIndex(0),
@@ -16,8 +16,13 @@ namespace Physics
 		CollisionDetectionJob(NumThreads, &StateFrontBuffer, &CurrentPairsBuffer, this),
 		CollisionResolutionJob(NumThreads, &CurrentPairsBuffer, &StateBackBuffer, this),
 		ApplyVelocitiesJob(NumThreads, &StateFrontBuffer, &StateBackBuffer, this),
-		CollisionOctree(BoundingBox(Vector4(-1000000, -1000000, -1000000), Vector4(1000000, 1000000, 1000000)))
-	{}
+		CollisionOctree(BoundingBox(Vector4(-1000, -1000, -1000), Vector4(1000, 1000, 1000)))
+	{
+		for (auto& buffer : PhysicsStateBuffers)
+		{
+			buffer.reserve(NumObjects);
+		}
+	}
 
 	PhysicsManager::~PhysicsManager()
 	{}
@@ -29,7 +34,7 @@ namespace Physics
 		//copy current state to back buffer
 		PhysicsStateBuffers[!StateFrontBufferIndex] = *StateFrontBuffer;
 
-		//CollisionOctree.Rebuild(*CurrentObjectBuffer, *StateFrontBuffer);
+		CollisionOctree.Rebuild(*StateFrontBuffer);
 
 		bool result = DetectCollisions();
 		ResolveCollisions();
@@ -46,9 +51,9 @@ namespace Physics
 		return result;
 	}
 
-	void PhysicsManager::AddCollisionObject(Core::Vector4& position, Core::Vector4& velocity, float radius)
+	void PhysicsManager::AddCollisionObject(const Core::Vector4& position, const Core::Vector4& velocity, float radius)
 	{
-		PhysicsObject newObject{ position, velocity, Core::Vector4(0.0f, 0.1f, 0.2f, 1.0f), radius };
+		PhysicsObject newObject{ position, velocity, Core::Vector4(0.0f, 0.1f, 0.2f, 1.0f), radius, StateFrontBuffer->size() };
 		StateFrontBuffer->push_back(newObject);
 	}
 

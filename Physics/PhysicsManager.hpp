@@ -20,14 +20,14 @@ namespace Physics
 	{
 	public:
 
-		PhysicsManager(int NumThreads = 1);
+		PhysicsManager(int NumThreads = 1, size_t NumObjects = 5000);
 		PhysicsManager(PhysicsManager& other) = delete;
 		PhysicsManager(PhysicsManager&& other) = delete;
 		~PhysicsManager();
 
 		bool RunFrame(float deltaTime);
 
-		void AddCollisionObject(Core::Vector4& position, Core::Vector4& velocity, float radius);
+		void AddCollisionObject(const Core::Vector4& position, const Core::Vector4& velocity, float radius);
 
 		void CopyCurrentPhysicsObjects(simd_vector<PhysicsObject>& outputBuffer);
 
@@ -56,15 +56,15 @@ namespace Physics
 		//lock when writing to back buffer
 		std::mutex BackBufferMutex;
 
-		std::vector<std::pair<size_t, size_t>> CollisionPairs;
+		std::vector<CollisionPair> CollisionPairs;
 		decltype(CollisionPairs)* CurrentPairsBuffer;
 
 		friend struct DetectCollisionsWorkerFunction;
 		friend struct ResolveCollisionsWorkerFunction;
 		friend struct ApplyVelocitiesWorkerFunction;
 
-		Task<simd_vector<PhysicsObject>, std::vector<std::pair<size_t, size_t>>, DetectCollisionsWorkerFunction, PhysicsManager> CollisionDetectionJob;
-		Task<std::vector<std::pair<size_t, size_t>>, simd_vector<PhysicsObject>, ResolveCollisionsWorkerFunction, PhysicsManager> CollisionResolutionJob;
+		Task<simd_vector<PhysicsObject>, std::vector<CollisionPair>, DetectCollisionsWorkerFunction, PhysicsManager> CollisionDetectionJob;
+		Task<std::vector<CollisionPair>, simd_vector<PhysicsObject>, ResolveCollisionsWorkerFunction, PhysicsManager> CollisionResolutionJob;
 		Task<simd_vector<PhysicsObject>, simd_vector<PhysicsObject>, ApplyVelocitiesWorkerFunction, PhysicsManager> ApplyVelocitiesJob;
 
 		Octree CollisionOctree;
