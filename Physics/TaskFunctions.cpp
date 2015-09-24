@@ -10,28 +10,28 @@ namespace Physics
 		//OutputDebugString("D\n");
 		CollisionObject& first = (**CollisionObjects)[CollisionObjectIndex];
 
-		simd_vector<CollisionObject*> potentialObjects;
-		simd_vector<PhysicsState*> potentialStates;
+		//simd_vector<CollisionObject*> potentialObjects;
+		//simd_vector<PhysicsState*> potentialStates;
 
 		auto& currentPhysicsBuffer = *(Manager->StateFrontBuffer);
 
-		Manager->CollisionOctree.GetPotentialColliders(currentPhysicsBuffer[first.PhysicsStateIndex].Position, first.Radius, potentialObjects, potentialStates);
+		//Manager->CollisionOctree.GetPotentialColliders(currentPhysicsBuffer[first.PhysicsStateIndex].Position, first.Radius, potentialObjects, potentialStates);
 
 		int stateIndex = 0;
-		for (auto second : potentialObjects)
+		for (auto& second : **CollisionObjects)
 		{
 			//don't check it against itself
-			if (first.PhysicsStateIndex == second->PhysicsStateIndex)
+			if (first.PhysicsStateIndex == second.PhysicsStateIndex)
 			{
 				continue;
 			}
 			
-			const float distanceSquared = (currentPhysicsBuffer[first.PhysicsStateIndex].Position - potentialStates[stateIndex]->Position).length3Squared();
-			const float totalRadiusSquared = (first.Radius + second->Radius) * (first.Radius + second->Radius);
+			const float distanceSquared = (currentPhysicsBuffer[first.PhysicsStateIndex].Position - currentPhysicsBuffer[second.PhysicsStateIndex].Position).length3Squared();
+			const float totalRadiusSquared = (first.Radius + second.Radius) * (first.Radius + second.Radius);
 			if (distanceSquared < totalRadiusSquared)
 			{
 				PairsMutex.lock();
-				(**CollisionPairs).push_back(std::make_pair(&first, second));
+				(**CollisionPairs).push_back(std::make_pair(&first, &second));
 				PairsMutex.unlock();
 			}
 			++stateIndex;

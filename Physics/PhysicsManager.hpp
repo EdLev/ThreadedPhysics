@@ -20,14 +20,14 @@ namespace Physics
 	{
 	public:
 
-		PhysicsManager( int NumThreads = 1 );
+		PhysicsManager(int NumThreads = 1);
 		PhysicsManager(PhysicsManager& other) = delete;
 		PhysicsManager(PhysicsManager&& other) = delete;
 		~PhysicsManager();
 
-		bool RunFrame( float deltaTime );
+		bool RunFrame(float deltaTime);
 
-		void AddCollisionObject( Core::Vector4& position, Core::Vector4& velocity, float radius );
+		void AddCollisionObject(Core::Vector4& position, Core::Vector4& velocity, float radius);
 
 		void CopyCurrentPhysicsState(simd_vector<PhysicsState>& outputBuffer);
 		void CopyCollisionObjects(simd_vector<CollisionObject>& outputBuffer);

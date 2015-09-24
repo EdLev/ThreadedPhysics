@@ -2,7 +2,7 @@
 
 namespace Rendering
 {
-	OpenGLRenderer::OpenGLRenderer( HWND windowHandle )
+	OpenGLRenderer::OpenGLRenderer(HWND windowHandle)
 	{
 		Window = windowHandle;
 		CreateContext();

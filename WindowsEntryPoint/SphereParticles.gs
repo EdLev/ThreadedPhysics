@@ -16,7 +16,7 @@ out float Depth;
 
 void main()
 {
-	vec4 Pos = vec4( gl_in[0].gl_Position.xyz, 1.0 );
+	vec4 Pos = vec4(gl_in[0].gl_Position.xyz, 1.0);
 	float Size = gl_in[0].gl_PointSize;
 
 	vec4 toCamera = normalize(gCameraPos - -Pos);

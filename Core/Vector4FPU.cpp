@@ -137,7 +137,7 @@ namespace Core
 
 	Vector4& Vector4::normalize3()
 	{
-		return (*this /= length3() );
+		return (*this /= length3());
 	}
 
 	Vector4 Vector4::getNormalized3() const
@@ -164,7 +164,7 @@ namespace Core
 
 	Vector4& Vector4::normalize4()
 	{
-		return (*this /= length4() );
+		return (*this /= length4());
 	}
 
 	Vector4 Vector4::getNormalized4() const

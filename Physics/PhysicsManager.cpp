@@ -8,15 +8,15 @@ namespace Physics
 {
 	using namespace Core;
 
-	PhysicsManager::PhysicsManager( int NumThreads )
+	PhysicsManager::PhysicsManager(int NumThreads)
 		: StateFrontBuffer(&PhysicsStateBuffers[0]),
 		StateBackBuffer(&PhysicsStateBuffers[1]),
-		StateFrontBufferIndex( 0 ),
-		CurrentObjectBuffer( &CollisionObjects ),
-		CurrentPairsBuffer( &CollisionPairs ),
-		CollisionDetectionJob( NumThreads, &CurrentObjectBuffer, &CurrentPairsBuffer, this ),
-		CollisionResolutionJob( NumThreads, &CurrentPairsBuffer, &StateFrontBuffer, this ),
-		ApplyVelocitiesJob( NumThreads, &StateFrontBuffer, &StateBackBuffer, this ),
+		StateFrontBufferIndex(0),
+		CurrentObjectBuffer(&CollisionObjects),
+		CurrentPairsBuffer(&CollisionPairs),
+		CollisionDetectionJob(NumThreads, &CurrentObjectBuffer, &CurrentPairsBuffer, this),
+		CollisionResolutionJob(NumThreads, &CurrentPairsBuffer, &StateFrontBuffer, this),
+		ApplyVelocitiesJob(NumThreads, &StateFrontBuffer, &StateBackBuffer, this),
 		CollisionOctree(500)
 	{}
 
@@ -30,7 +30,7 @@ namespace Physics
 		//copy current state to back buffer
 		PhysicsStateBuffers[!StateFrontBufferIndex] = *StateFrontBuffer;
 
-		CollisionOctree.Rebuild(*CurrentObjectBuffer, *StateFrontBuffer);
+		//CollisionOctree.Rebuild(*CurrentObjectBuffer, *StateFrontBuffer);
 
 		bool result = DetectCollisions();
 		ResolveCollisions();

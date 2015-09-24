@@ -8,8 +8,8 @@ out vec4 FragColor;
 
 void main()
 {
-    vec2 pos = ( TexCoord - 0.5 ) * 2.0;
-    float dist = dot( pos, pos );
+    vec2 pos = (TexCoord - 0.5) * 2.0;
+    float dist = dot(pos, pos);
 
    if (dist > 1.0) 
    {

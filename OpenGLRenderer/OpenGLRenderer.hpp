@@ -9,7 +9,7 @@ namespace Rendering
 	class OpenGLRenderer
 	{
 	public:
-		OpenGLRenderer( HWND windowHandle );
+		OpenGLRenderer(HWND windowHandle);
 		~OpenGLRenderer();
 
 		void ResizeViewport(int width, int height);

@@ -10,14 +10,14 @@ class Task
 public:
 	//double-pointers so the application can manage which buffers we read/write
 	Task(unsigned int NumThreads, InputDataContainerType** InInputBuffer, OutputDataContainerType** InOutputBuffer, ExtraObjectType* ExtraObject)
-		:	InputBuffer( InInputBuffer ),
-			OutputBuffer( InOutputBuffer ),
-			bShutdown( false ),
-			bFinished( false ),
-			bDoWork( false ),
-			CurrentDataIndex( 0 )
+		:	InputBuffer(InInputBuffer),
+			OutputBuffer(InOutputBuffer),
+			bShutdown(false),
+			bFinished(false),
+			bDoWork(false),
+			CurrentDataIndex(0)
 	{
-		for (size_t threadIndex = 0; threadIndex < NumThreads; ++threadIndex )
+		for (size_t threadIndex = 0; threadIndex < NumThreads; ++threadIndex)
 		{
 			BackgroundThreads.push_back(std::thread(&Task::ThreadWork, this, ExtraObject));
 		}
@@ -54,7 +54,7 @@ public:
 
 private:
 
-	void ThreadWork( ExtraObjectType* ExtraObject )
+	void ThreadWork(ExtraObjectType* ExtraObject)
 	{
 		while (!bShutdown)
 		{

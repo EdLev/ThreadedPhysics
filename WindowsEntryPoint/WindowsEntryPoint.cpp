@@ -120,7 +120,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	SphereParticleTechnique spriteTechnique;
 	PhysicsManager physicsManager(16);
 
-	default_random_engine engine( 0/*chrono::high_resolution_clock::now().time_since_epoch().count() */);
+	default_random_engine engine(0/*chrono::high_resolution_clock::now().time_since_epoch().count() */);
 	uniform_real_distribution<float> positionDist(-500.0f, 500.0f);
 	uniform_real_distribution<float> velocityDist(-10.0f, 10.0f);
 
@@ -148,7 +148,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	Matrix4 triangleModel;
 
 	chrono::time_point<chrono::high_resolution_clock> lastTime = chrono::high_resolution_clock::now();
-	chrono::duration<float> second( 0 );
+	chrono::duration<float> second(0);
 	unsigned int frameCounter = 0;
 
 	bool bRunning = true;
@@ -200,8 +200,14 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			transform(physicsState.begin(), physicsState.end(), collisionObjects.begin(), back_inserter(sprites),
 				[](const PhysicsState& state, const CollisionObject& object)->SphereSprite
 			{
-				const SphereSprite result = { state.Position, object.Color, object.Radius };
-				return result;
+				return SphereSprite { state.Position, object.Color, object.Radius };
+			});
+
+			Matrix4 viewProjection = Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(10.0f, 1.6f, 10, 10000);
+
+			sort(sprites.begin(), sprites.end(), [&](const SphereSprite& first, const SphereSprite& second)
+			{
+				return (viewProjection * first.Position).Z < (viewProjection * second.Position).Z;
 			});
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -212,12 +218,12 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 			cameraPosition.Z = -500;
 
 			spriteTechnique.Enable();
-			spriteTechnique.SetViewProjection(Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(10.0f, 1.6f, 10, 10000));
+			spriteTechnique.SetViewProjection(viewProjection);
 			//spriteTechnique.SetViewProjection(Matrix4::OrthographicProjectionMatrix(-500, 500, 500, -500, -500, 500));
 			spriteTechnique.SetCameraPosition(cameraPosition);
 
 			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), 0);
-			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)(sizeof(Vector4)) );
+			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)(sizeof(Vector4)));
 			glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(SphereSprite), (void*)(sizeof(Vector4) * 2));
 
 			glBufferData(GL_ARRAY_BUFFER, sprites.size() * sizeof(SphereSprite), &sprites.front(), GL_DYNAMIC_DRAW);
@@ -278,7 +284,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+      CW_USEDEFAULT, 0, 1280, 800, NULL, NULL, hInstance, NULL);
 
    if (!hWnd)
    {
