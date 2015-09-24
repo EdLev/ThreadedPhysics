@@ -1,36 +1,51 @@
 #pragma once
+
+#include <vector>
+#include <memory>
+
 #include "Types.hpp"
+#include "../Core/BoundingBox.hpp"
 
 namespace Physics
 {
 	struct OctreeNode
 	{
-		simd_vector<CollisionObject> ObjectCopies;
-		simd_vector<PhysicsState> StateCopies; //for memory contiguity
+		OctreeNode(const Core::BoundingBox& bounds);
 
-		OctreeNode* Children[8];
+		//TODO make this better
+		//aligned new and delete for make_unique
+		void* operator new(size_t i)
+		{
+			return _mm_malloc(i,16);
+		}
+
+			void operator delete(void* p)
+		{
+			_mm_free(p);
+		}
+
+		OctreeNode* Parent;
+		std::unique_ptr<OctreeNode> Children[8];
 		Core::Vector4 Center;
 		bool bLeaf;
-
-		OctreeNode();
+		std::vector<const PhysicsObject*> Objects;
+		Core::BoundingBox Bounds;
 	};
 
 	class Octree
 	{
 	public:
-		Octree(int MaxObjectsPerNode = 10);
+		Octree(const Core::BoundingBox& bounds);
 
-		void Rebuild(const simd_vector<CollisionObject>& Objects, const simd_vector<PhysicsState>& States);	
-		void AddObject(const CollisionObject* const NewObject, const PhysicsState& NewState);
+		void Rebuild(const simd_vector<PhysicsObject>& Objects);	
+		void AddObject(const PhysicsObject* const NewObject);
 
-		void GetPotentialColliders(Core::Vector4& Position, float Radius, simd_vector<CollisionObject*>& OutObjects, simd_vector<PhysicsState*>& OutStates);
+		void GetPotentialColliders(Core::Vector4& Position, float Radius, std::vector<const PhysicsObject*>& OutObjects);
 
 	private:
 
-		void BuildNode(OctreeNode* Node, const simd_vector<CollisionObject>& Objects, const simd_vector<PhysicsState>& States);
+		void BuildSubtree(std::unique_ptr<OctreeNode>& Node, const std::vector<const PhysicsObject*>& Objects);
 
-		OctreeNode Root;
-		size_t MaxObjectsPerNode;
-		simd_vector<OctreeNode> ChildrenBuffer;
+		std::unique_ptr<OctreeNode> Root;
 	};
 }

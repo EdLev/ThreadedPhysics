@@ -29,8 +29,7 @@ namespace Physics
 
 		void AddCollisionObject(Core::Vector4& position, Core::Vector4& velocity, float radius);
 
-		void CopyCurrentPhysicsState(simd_vector<PhysicsState>& outputBuffer);
-		void CopyCollisionObjects(simd_vector<CollisionObject>& outputBuffer);
+		void CopyCurrentPhysicsObjects(simd_vector<PhysicsObject>& outputBuffer);
 
 	private:
 
@@ -44,15 +43,12 @@ namespace Physics
 		void FinishFrame();
 
 		//set at the beginning of the frame
-		float CurrentdeltaTime;
-
-		simd_vector<CollisionObject> CollisionObjects;
-		decltype(CollisionObjects)* CurrentObjectBuffer;
+		float CurrentDeltaTime;
 
 		//front and back buffers for threading
-		simd_vector<PhysicsState> PhysicsStateBuffers[2];
-		simd_vector<PhysicsState>* StateFrontBuffer;
-		simd_vector<PhysicsState>* StateBackBuffer;
+		simd_vector<PhysicsObject> PhysicsStateBuffers[2];
+		simd_vector<PhysicsObject>* StateFrontBuffer;
+		simd_vector<PhysicsObject>* StateBackBuffer;
 		int StateFrontBufferIndex;
 
 		//lock when swapping buffers and when copying out the current state
@@ -60,16 +56,16 @@ namespace Physics
 		//lock when writing to back buffer
 		std::mutex BackBufferMutex;
 
-		std::vector<std::pair<CollisionObject*, CollisionObject*>> CollisionPairs;
+		std::vector<std::pair<size_t, size_t>> CollisionPairs;
 		decltype(CollisionPairs)* CurrentPairsBuffer;
 
 		friend struct DetectCollisionsWorkerFunction;
 		friend struct ResolveCollisionsWorkerFunction;
 		friend struct ApplyVelocitiesWorkerFunction;
 
-		Task<decltype(CollisionObjects), decltype(CollisionPairs), DetectCollisionsWorkerFunction, PhysicsManager> CollisionDetectionJob;
-		Task<decltype(CollisionPairs), simd_vector<PhysicsState>, ResolveCollisionsWorkerFunction, PhysicsManager> CollisionResolutionJob;
-		Task<simd_vector<PhysicsState>, simd_vector<PhysicsState>, ApplyVelocitiesWorkerFunction, PhysicsManager> ApplyVelocitiesJob;
+		Task<simd_vector<PhysicsObject>, std::vector<std::pair<size_t, size_t>>, DetectCollisionsWorkerFunction, PhysicsManager> CollisionDetectionJob;
+		Task<std::vector<std::pair<size_t, size_t>>, simd_vector<PhysicsObject>, ResolveCollisionsWorkerFunction, PhysicsManager> CollisionResolutionJob;
+		Task<simd_vector<PhysicsObject>, simd_vector<PhysicsObject>, ApplyVelocitiesWorkerFunction, PhysicsManager> ApplyVelocitiesJob;
 
 		Octree CollisionOctree;
 	};

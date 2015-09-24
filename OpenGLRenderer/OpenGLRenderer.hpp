@@ -16,6 +16,8 @@ namespace Rendering
 
 		void Render();
 
+		float AspectRatio;
+
 	private:
 		bool CreateContext();
 		void PrepareScene();

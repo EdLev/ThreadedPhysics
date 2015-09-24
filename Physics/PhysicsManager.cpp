@@ -12,12 +12,11 @@ namespace Physics
 		: StateFrontBuffer(&PhysicsStateBuffers[0]),
 		StateBackBuffer(&PhysicsStateBuffers[1]),
 		StateFrontBufferIndex(0),
-		CurrentObjectBuffer(&CollisionObjects),
 		CurrentPairsBuffer(&CollisionPairs),
-		CollisionDetectionJob(NumThreads, &CurrentObjectBuffer, &CurrentPairsBuffer, this),
-		CollisionResolutionJob(NumThreads, &CurrentPairsBuffer, &StateFrontBuffer, this),
+		CollisionDetectionJob(NumThreads, &StateFrontBuffer, &CurrentPairsBuffer, this),
+		CollisionResolutionJob(NumThreads, &CurrentPairsBuffer, &StateBackBuffer, this),
 		ApplyVelocitiesJob(NumThreads, &StateFrontBuffer, &StateBackBuffer, this),
-		CollisionOctree(500)
+		CollisionOctree(BoundingBox(Vector4(-1000000, -1000000, -1000000), Vector4(1000000, 1000000, 1000000)))
 	{}
 
 	PhysicsManager::~PhysicsManager()
@@ -25,7 +24,7 @@ namespace Physics
 
 	bool PhysicsManager::RunFrame(float deltaTime)
 	{
-		CurrentdeltaTime = deltaTime;
+		CurrentDeltaTime = deltaTime;
 
 		//copy current state to back buffer
 		PhysicsStateBuffers[!StateFrontBufferIndex] = *StateFrontBuffer;
@@ -49,11 +48,8 @@ namespace Physics
 
 	void PhysicsManager::AddCollisionObject(Core::Vector4& position, Core::Vector4& velocity, float radius)
 	{
-		CollisionObjects.reserve(100);
-		PhysicsState newState = { position, velocity };
-		StateFrontBuffer->push_back(newState);
-		//CollisionObject newObject = ;
-		CollisionObjects.push_back({ StateFrontBuffer->size() - 1, Core::Vector4(1.0f, 0.0f, 0.0f, 1.0f), radius });
+		PhysicsObject newObject{ position, velocity, Core::Vector4(0.0f, 0.1f, 0.2f, 1.0f), radius };
+		StateFrontBuffer->push_back(newObject);
 	}
 
 	bool PhysicsManager::DetectCollisions()
@@ -76,17 +72,10 @@ namespace Physics
 		ApplyVelocitiesJob.Work();
 	}
 
-	void PhysicsManager::CopyCurrentPhysicsState(simd_vector<PhysicsState>& outputBuffer)
+	void PhysicsManager::CopyCurrentPhysicsObjects(simd_vector<PhysicsObject>& outputBuffer)
 	{
 		CurrentBufferMutex.lock();
 		outputBuffer = *StateFrontBuffer;
 		CurrentBufferMutex.unlock();
 	}
-
-	void PhysicsManager::CopyCollisionObjects(simd_vector<CollisionObject>& outputBuffer)
-	{
-		outputBuffer = CollisionObjects;
-	}
-
-
 }

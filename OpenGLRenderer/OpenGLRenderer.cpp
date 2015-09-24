@@ -73,6 +73,7 @@ namespace Rendering
 	{
 		WindowWidth = width;
 		WindowHeight = height;
+		AspectRatio = static_cast<float>(width) / height;
 
 		glViewport(0, 0, WindowWidth, WindowHeight);
 	}

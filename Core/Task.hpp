@@ -3,7 +3,7 @@
 #include <vector>
 #include <atomic>
 
-//a pool of threads dedicated to running a particular function on a buffer of data
+//a pool of threads dedicated to running a particular function on input and output buffers of data
 template <class InputDataContainerType, class OutputDataContainerType, class FunctionType, class ExtraObjectType>
 class Task
 {

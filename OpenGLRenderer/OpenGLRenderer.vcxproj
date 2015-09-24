@@ -85,11 +85,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="OpenGLRenderer.hpp" />
+    <ClInclude Include="SpriteTechnique.hpp" />
     <ClInclude Include="Technique.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="OpenGLRenderer.cpp" />
     <ClCompile Include="Technique.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\WindowsEntryPoint\Simple.fs" />
+    <None Include="..\WindowsEntryPoint\Simple.vs" />
+    <None Include="..\WindowsEntryPoint\SphereParticles.fs" />
+    <None Include="..\WindowsEntryPoint\SphereParticles.gs" />
+    <None Include="..\WindowsEntryPoint\SphereParticles.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

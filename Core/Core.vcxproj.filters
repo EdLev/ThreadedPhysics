@@ -30,12 +30,18 @@
     <ClInclude Include="Task.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BoundingBox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vector4SSE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Vector4FPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

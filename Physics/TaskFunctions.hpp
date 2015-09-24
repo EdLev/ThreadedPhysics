@@ -12,23 +12,23 @@ namespace Physics
 	struct DetectCollisionsWorkerFunction
 	{
 		std::mutex PairsMutex;
-		void operator () (simd_vector<CollisionObject>** CollisionObjects, std::vector<std::pair<CollisionObject*, CollisionObject*>>** CollisionPairs, size_t CollisionObjectIndex, PhysicsManager* Manager);
+		void operator () (simd_vector<PhysicsObject>** CollisionObjects, std::vector<std::pair<size_t, size_t>>** CollisionPairs, size_t CollisionObjectIndex, PhysicsManager* Manager);
 	};
 
 	struct ResolveCollisionsWorkerFunction
 	{
-		std::default_random_engine engine;
+		std::default_random_engine RandomEngine;
 		std::uniform_real_distribution<float> colorDist;
 
 		ResolveCollisionsWorkerFunction()
 			: colorDist(0.0f, 1.0f)
 		{}
 
-		void operator () (std::vector<std::pair<CollisionObject*, CollisionObject*>>** CollisionPairs, simd_vector<PhysicsState>** PhysicsStateBuffer, size_t PairIndex, PhysicsManager* Manager);
+		void operator () (std::vector<std::pair<size_t, size_t>>** CollisionPairs, simd_vector<PhysicsObject>** FrontBuffer, size_t PairIndex, PhysicsManager* Manager);
 	};
 
 	struct ApplyVelocitiesWorkerFunction
 	{
-		void operator () (simd_vector<PhysicsState>** FrontBuffer, simd_vector<PhysicsState>** BackBuffer, size_t StateIndex, PhysicsManager* Manager);
+		void operator () (simd_vector<PhysicsObject>** FrontBuffer, simd_vector<PhysicsObject>** BackBuffer, size_t StateIndex, PhysicsManager* Manager);
 	};
 }
