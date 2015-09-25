@@ -37,7 +37,6 @@ namespace Physics
 	{
 		using namespace Core;
 		auto& backBuffer = **BackBuffer;
-		auto& frontBuffer = *Manager->StateFrontBuffer;
 		auto& collisionPair = (**CollisionPairs)[PairIndex];
 
 		auto firstObject = collisionPair.first;

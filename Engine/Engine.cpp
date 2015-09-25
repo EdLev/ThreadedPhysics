@@ -9,12 +9,12 @@ using namespace std;
 using namespace Core;
 using namespace Physics;
 
-static const size_t NumObjects = 10000;
+static const size_t NumObjects = 30000;
 
 namespace Engine
 {
 	Engine::Engine(std::shared_ptr<Rendering::OpenGLRenderer> InRenderer) :
-		PhysicsManager(1, NumObjects),
+		PhysicsManager(16, NumObjects),
 		Renderer(InRenderer),
 		RandomEngine((unsigned int)chrono::high_resolution_clock::now().time_since_epoch().count()),
 		PositionDist(-500.0f, 500.0f),
@@ -37,6 +37,7 @@ namespace Engine
 		unsigned int frameCounter = 0;
 
 		bool bRunning = true;
+		unsigned int numCollisions = 0;
 		while (bRunning)
 		{
 			if (PlatformManager.PumpMessage() == Quit)
@@ -47,11 +48,14 @@ namespace Engine
 			{
 				chrono::duration<float> frame(0);
 
+
 				while (frame.count() < 1.0f / 60.0f)
 				{
 					chrono::duration<float> interval(chrono::high_resolution_clock::now() - lastTime);
 					lastTime = chrono::high_resolution_clock::now();
 					Simulate(interval.count());
+					numCollisions += PhysicsManager.NumFrameCollisions;
+					PhysicsManager.NumFrameCollisions = 0;
 					frame += interval;
 					second += interval;
 					++frameCounter;
@@ -65,9 +69,10 @@ namespace Engine
 
 				if (second.count() >= 1.0f)
 				{
-					sprintf_s(str, "%d\n", frameCounter);
+					sprintf_s(str, "%d %d\n", frameCounter, numCollisions);
 					OutputDebugString(str);
 					frameCounter = 0;
+					numCollisions = 0;
 					second = second.zero();
 				}
 
@@ -94,9 +99,9 @@ namespace Engine
 			return SphereSprite{ object.Position, object.Color, object.CollisionRadius };
 		});
 
-		Vector4 cameraPosition(0, 0, -500);
+		Vector4 cameraPosition(0, 0, -1000);
 
-		Matrix4 viewProjection = Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(2.5f, Renderer->AspectRatio, 10, 10000);
+		Matrix4 viewProjection = Matrix4(cameraPosition) * Matrix4::PerspectiveProjectionMatrix(3.0f, Renderer->AspectRatio, 10, 10000);
 
 		sort(sprites.begin(), sprites.end(), [&](const SphereSprite& first, const SphereSprite& second)
 		{

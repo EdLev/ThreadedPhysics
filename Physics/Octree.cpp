@@ -6,6 +6,8 @@
 using namespace Core;
 namespace Physics
 {
+	static const int MaxObjectsInLeaf = 100;
+
 	OctreeNode::OctreeNode(const BoundingBox& bounds) :
 		Bounds(bounds)
 	{
@@ -46,11 +48,11 @@ namespace Physics
 	{
 		using namespace std;
 
-		if (Objects.size() <= 1 || (Node->Bounds.Max - Node->Bounds.Min).length3Squared() < 1.0f)
+		if (Objects.size() <= MaxObjectsInLeaf || (Node->Bounds.Max - Node->Bounds.Min).length3Squared() < 1.0f)
 		{
 			if (!Objects.empty())
 			{
-				Node->Objects.push_back(Objects.front());
+				Node->Objects.insert(Node->Objects.end(), Objects.begin(), Objects.end());
 			}
 				
 			Node->bLeaf = true;
@@ -71,25 +73,32 @@ namespace Physics
 				childIndex |= (object->Position.Z < center.Z) << 2;
 				childObjects[childIndex].push_back(object);
 
-				//for (int cardinal = 0; cardinal < 8; ++cardinal)
-				//{
-				//	const float Radius = object->CollisionRadius;
-				//	Vector4 testPosition(
-				//		(cardinal & 1) ? object->Position.X - Radius : object->Position.X + Radius,
-				//		(cardinal & 2) ? object->Position.Y - Radius : object->Position.Y + Radius,
-				//		(cardinal & 4) ? object->Position.Z - Radius : object->Position.Z + Radius
-				//	);
+				bool alreadyAdded[8];
+				for (bool& added : alreadyAdded)
+				{
+					added = false;
+				}
 
-				//	int testIndex = 0;
-				//	testIndex |= (testPosition.X < center.X);
-				//	testIndex |= (testPosition.Y < center.Y) << 1;
-				//	testIndex |= (testPosition.Z < center.Z) << 2;
+				for (int cardinal = 0; cardinal < 8; ++cardinal)
+				{
+					const float Radius = object->CollisionRadius;
+					Vector4 testPosition(
+						(cardinal & 1) ? object->Position.X - Radius : object->Position.X + Radius,
+						(cardinal & 2) ? object->Position.Y - Radius : object->Position.Y + Radius,
+						(cardinal & 4) ? object->Position.Z - Radius : object->Position.Z + Radius
+					);
 
-				//	if (testIndex != childIndex)
-				//	{
-				//		childObjects[testIndex].push_back(object);
-				//	}
-				//}
+					int testIndex = 0;
+					testIndex |= (testPosition.X < center.X);
+					testIndex |= (testPosition.Y < center.Y) << 1;
+					testIndex |= (testPosition.Z < center.Z) << 2;
+
+					if (testIndex != childIndex && !alreadyAdded[testIndex])
+					{
+						childObjects[testIndex].push_back(object);
+						alreadyAdded[testIndex] = true;
+					}
+				}
 			}
 
 			int childIndex = 0;
@@ -184,6 +193,7 @@ namespace Physics
 
 	void Octree::GetPotentialColliders(Vector4& Position, float Radius, std::vector<PhysicsObject*>& OutObjects)
 	{
+		OutObjects.reserve(MaxObjectsInLeaf);
 		GetNodeColliders(Root, Position, Radius, OutObjects);
 	}
 

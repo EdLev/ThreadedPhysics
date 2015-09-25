@@ -31,6 +31,8 @@ namespace Physics
 
 		void CopyCurrentPhysicsObjects(simd_vector<PhysicsObject>& outputBuffer);
 
+		std::atomic<unsigned int> NumFrameCollisions;
+
 	private:
 
 		bool DetectCollisions();
