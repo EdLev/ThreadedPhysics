@@ -44,6 +44,67 @@ namespace Physics
 		BuildSubtree(Root, objectPointers);
 	}
 
+	Vector4 CardinalOffset(const Vector4& center, const float radius, const int cardinal)
+	{
+		return Vector4(
+			(cardinal & 1) ? center.X - radius : center.X + radius,
+			(cardinal & 2) ? center.Y - radius : center.Y + radius,
+			(cardinal & 4) ? center.Z - radius : center.Z + radius
+		);
+	}
+
+	//build the child box for the child octant
+	BoundingBox BuildChildBounds(const BoundingBox& parentBounds, int childIndex)
+	{
+		Vector4 center = (parentBounds.Min + parentBounds.Max) / 2.0f;
+		BoundingBox result;
+		if ((childIndex & 1) != 0)
+		{
+			result.Min.X = parentBounds.Min.X;
+			result.Max.X = center.X;
+		}
+		else
+		{
+			result.Min.X = center.X;
+			result.Max.X = parentBounds.Max.X;
+		}
+
+		if ((childIndex & 2) != 0)
+		{
+			result.Min.Y = parentBounds.Min.Y;
+			result.Max.Y = center.Y;
+		}
+		else
+		{
+			result.Min.Y = center.Y;
+			result.Max.Y = parentBounds.Max.Y;
+		}
+
+		if ((childIndex & 4) != 0)
+		{
+			result.Min.Z = parentBounds.Min.Z;
+			result.Max.Z = center.Z;
+		}
+		else
+		{
+			result.Min.Z = center.Z;
+			result.Max.Z = parentBounds.Max.Z;
+		}
+
+		return result;
+	}
+
+	int SelectChild(const Vector4& parentCenter, const Vector4& position)
+	{
+		//make an index out of a bitmask consisting of the comparison on each axis of position vs center
+		int childIndex = 0;
+		childIndex |= (position.X < parentCenter.X);
+		childIndex |= (position.Y < parentCenter.Y) << 1;
+		childIndex |= (position.Z < parentCenter.Z) << 2;
+
+		return childIndex;
+	}
+
 	void Octree::BuildSubtree(std::unique_ptr<OctreeNode>& Node, const std::vector<PhysicsObject*>& Objects)
 	{
 		using namespace std;
@@ -66,32 +127,19 @@ namespace Physics
 
 			for(PhysicsObject* object : Objects)
 			{
-				//make an index out of a bitmask consisting of the comparison on each axis of position vs center
-				int childIndex = 0;
-				childIndex |= (object->Position.X < center.X);
-				childIndex |= (object->Position.Y < center.Y) << 1;
-				childIndex |= (object->Position.Z < center.Z) << 2;
+				int childIndex = SelectChild(center, object->Position);
 				childObjects[childIndex].push_back(object);
 
 				bool alreadyAdded[8];
-				for (bool& added : alreadyAdded)
-				{
-					added = false;
-				}
+				std::fill(std::begin(alreadyAdded), std::end(alreadyAdded), false);
 
+				//also add to any nodes overlapped by the radius
 				for (int cardinal = 0; cardinal < 8; ++cardinal)
 				{
-					const float Radius = object->CollisionRadius;
-					Vector4 testPosition(
-						(cardinal & 1) ? object->Position.X - Radius : object->Position.X + Radius,
-						(cardinal & 2) ? object->Position.Y - Radius : object->Position.Y + Radius,
-						(cardinal & 4) ? object->Position.Z - Radius : object->Position.Z + Radius
-					);
+					const float radius = object->CollisionRadius;
+					Vector4 testPosition(CardinalOffset(object->Position, radius, cardinal));
 
-					int testIndex = 0;
-					testIndex |= (testPosition.X < center.X);
-					testIndex |= (testPosition.Y < center.Y) << 1;
-					testIndex |= (testPosition.Z < center.Z) << 2;
+					int testIndex = SelectChild(center, testPosition);
 
 					if (testIndex != childIndex && !alreadyAdded[testIndex])
 					{
@@ -106,43 +154,7 @@ namespace Physics
 			{
 				if (!childObjects[childIndex].empty())
 				{
-					Vector4 min;
-					Vector4 max;
-
-					if ((childIndex & 1) != 0)
-					{
-						min.X = Node->Bounds.Min.X;
-						max.X = center.X;
-					}
-					else
-					{
-						min.X = center.X;
-						max.X = Node->Bounds.Max.X;
-					}
-
-					if ((childIndex & 2) != 0)
-					{
-						min.Y = Node->Bounds.Min.Y;
-						max.Y = center.Y;
-					}
-					else
-					{
-						min.Y = center.Y;
-						max.Y = Node->Bounds.Max.Y;
-					}
-
-					if ((childIndex & 4) != 0)
-					{
-						min.Z = Node->Bounds.Min.Z;
-						max.Z = center.Z;
-					}
-					else
-					{
-						min.Z = center.Z;
-						max.Z = Node->Bounds.Max.Z;
-					}
-
-					Child = std::make_unique<OctreeNode>(BoundingBox(min, max));
+					Child = std::make_unique<OctreeNode>(BuildChildBounds(Node->Bounds, childIndex));
 					Child->Parent = Node.get();
 					BuildSubtree(Child, childObjects[childIndex]);
 				}
@@ -151,41 +163,30 @@ namespace Physics
 		}
 	}
 
-	void GetNodeColliders(std::unique_ptr<OctreeNode>& Node, Vector4& Position, float Radius, std::vector<PhysicsObject*>& OutObjects)
+	void GetNodeColliders(std::unique_ptr<OctreeNode>& node, Vector4& position, float radius, std::vector<PhysicsObject*>& OutObjects)
 	{
-		if (Node == nullptr)
+		if (node == nullptr)
 			return;
 
-		if (Node->bLeaf)
+		if (node->bLeaf)
 		{
-			OutObjects.insert(OutObjects.end(), Node->Objects.begin(), Node->Objects.end());
+			OutObjects.insert(OutObjects.end(), node->Objects.begin(), node->Objects.end());
 		}
 		else
 		{
-			//make an index out of a bitmask consisting of the comparison on each axis of position vs center
-			int childIndex = 0;
-			childIndex |= (Position.X < Node->Center.X);
-			childIndex |= (Position.Y < Node->Center.Y) << 1;
-			childIndex |= (Position.Z < Node->Center.Z) << 2;
-			
-			GetNodeColliders(Node->Children[childIndex], Position, Radius, OutObjects);
+			int childIndex = SelectChild(node->Center, position);			
+			GetNodeColliders(node->Children[childIndex], position, radius, OutObjects);
 
+			//handle tests near node edges
 			for (int cardinal = 0; cardinal < 8; ++cardinal)
 			{
-				Vector4 testPosition(
-					(cardinal & 1) ? Position.X - Radius : Position.X + Radius,
-					(cardinal & 2) ? Position.Y - Radius : Position.Y + Radius,
-					(cardinal & 4) ? Position.Z - Radius : Position.Z + Radius
-					);
+				Vector4 testPosition(CardinalOffset(position, radius, cardinal));
 
-				int testIndex = 0;
-				testIndex |= (testPosition.X < Node->Center.X);
-				testIndex |= (testPosition.Y < Node->Center.Y) << 1;
-				testIndex |= (testPosition.Z < Node->Center.Z) << 2;
+				int testIndex = SelectChild(node->Center, testPosition);
 
 				if (testIndex != childIndex)
 				{
-					GetNodeColliders(Node->Children[testIndex], Position, Radius, OutObjects);
+					GetNodeColliders(node->Children[testIndex], position, radius, OutObjects);
 				}
 			}
 		}

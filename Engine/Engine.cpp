@@ -14,18 +14,22 @@ static const size_t NumObjects = 30000;
 namespace Engine
 {
 	Engine::Engine(std::shared_ptr<Rendering::OpenGLRenderer> InRenderer) :
-		PhysicsManager(16, NumObjects),
+		PhysicsManager(32, NumObjects),
 		Renderer(InRenderer),
 		RandomEngine((unsigned int)chrono::high_resolution_clock::now().time_since_epoch().count()),
-		PositionDist(-500.0f, 500.0f),
+		PositionDist(-1.0f, 1.0f),
 		VelocityDist(-10.0f, 10.0f),
 		NumSpheres(NumObjects)
 	{
 		for (int i = 0; i < NumSpheres; ++i)
 		{
-			PhysicsManager.AddCollisionObject(Vector4(PositionDist(RandomEngine), PositionDist(RandomEngine), PositionDist(RandomEngine)),
+			float distance = PositionDist(RandomEngine);
+			Vector4 direction(PositionDist(RandomEngine), PositionDist(RandomEngine), PositionDist(RandomEngine));
+			Vector4 position = direction * ((1000.0f * std::cbrt(distance)) / direction.length3());
+
+			PhysicsManager.AddCollisionObject(position,
 				Vector4(VelocityDist(RandomEngine), VelocityDist(RandomEngine), VelocityDist(RandomEngine)),
-				5.0f);
+				1.0f);
 		}
 	}
 

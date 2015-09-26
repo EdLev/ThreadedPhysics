@@ -66,6 +66,9 @@ namespace Physics
 	{
 		//Forward Euler for now
 		//Don't need to lock - 2 threads with this function will never try to write to the same position in the array
+		Core::Vector4 position((**FrontBuffer)[StateIndex].Position);
 		(**BackBuffer)[StateIndex].Position = (**FrontBuffer)[StateIndex].Position + (**FrontBuffer)[StateIndex].Velocity * Manager->CurrentDeltaTime;
+		//TODO this is a hack for testing
+		(**BackBuffer)[StateIndex].Velocity -= position.getNormalized3() * 0.01f;
 	}
 }

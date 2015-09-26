@@ -39,7 +39,7 @@ namespace Physics
 		bool result = DetectCollisions();
 		ResolveCollisions();
 
-		std::sort(CollisionPairs.begin(), CollisionPairs.end(), [](auto& a, auto& b) { return a.first < b.first || a.second < b.second; });
+		std::sort(CollisionPairs.begin(), CollisionPairs.end(), [](auto& a, auto& b) { return a.first < b.first && a.second < b.second; });
 		CollisionPairs.resize(std::distance(CollisionPairs.begin(), std::unique(CollisionPairs.begin(), CollisionPairs.end())));
 		NumFrameCollisions = CollisionPairs.size();
 
